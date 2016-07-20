@@ -1,0 +1,76 @@
+[{
+    "title": "TEAM 1",
+    "content": [{
+        "title": "Peter",
+        "content": [{
+            "title": "QUARTER 1",
+            "content": [{
+                "title": "January",
+                "content": {
+                    "value": "$10,000.00"
+                }
+            }, {
+                "title": "February",
+                "content": {
+                    "value": "$10,266.00"
+                }
+            }, {
+                "title": "March",
+                "content": {
+                    "value": "$5,666.00"
+                }
+            }]
+        }]
+    }, {
+        "title": "Paul",
+        "content": [{
+            "title": "QUARTER 1",
+            "content": [{
+                "title": "January",
+                "content": {
+                    "value": "$6,683.00",
+                    "additional": "30.00%"
+                }
+            }, {
+                "title": "February",
+                "content": {
+                    "value": "$8,779.00",
+                    "additional": "34.00%"
+                }
+            }, {
+                "title": "March",
+                "content": {
+                    "value": "$$7,889.00",
+                    "additional": "55.00%"
+                }
+            }]
+        }]
+    }, {
+        "title": "Mary",
+        "content": [{
+            "title": "QUARTER 1",
+            "content": [{
+                "title": "January",
+                "content": {
+                    "label": "Revenue",
+                    "value": "$12,334.00",
+                    "additional": "30.00%"
+                }
+            }, {
+                "title": "February",
+                "content": {
+                    "label": "Revenue",
+                    "value": "$8,999.00",
+                    "additional": "30.00%"
+                }
+            }, {
+                "title": "March",
+                "content": {
+                    "label": "Revenue",
+                    "value": "$11,334.00",
+                    "additional": "30.00%"
+                }
+            }]
+        }]
+    }]
+}]

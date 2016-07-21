@@ -6,7 +6,7 @@
     "homepage": "https://github.com/preciousforever/sketch-data-populator",
     "identifier": "com.precious-forever.sketch.datapopulatorBETA",
     "compatibleVersion": "3.7",
-    "version": "1.6-beta.3",
+    "version": "1.7.2",
     "commands": [{
         "name": "Populate with Preset",
         "identifier": "populateWithPreset",
@@ -18,6 +18,12 @@
         "identifier": "populateWithJSON",
         "script": "plugin.cocoascript",
         "handler": "populateWithJSONHandler",
+        "shortcut": ""
+    }, {
+        "name": "Populate Table",
+        "identifier": "populateTable",
+        "script": "plugin.cocoascript",
+        "handler": "populateTableHandler",
         "shortcut": ""
     }, {
         "name": "Populate Again",
@@ -55,6 +61,7 @@
         "items": [
             "populateWithJSON",
             "populateWithPreset",
+            "populateTable",
             "populateAgain",
             "revealPresets",
             "insertImage",

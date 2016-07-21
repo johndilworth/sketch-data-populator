@@ -8,6 +8,60 @@
 var context;
 var selection;
 
+function populateTableHandler(_context) {
+	context = _context;
+	
+	//get user defaults
+	var defaults = [NSUserDefaults standardUserDefaults];
+
+	//get selected layers
+	var selectedLayers = Library.getSelectedLayers();
+	selection = selectedLayers;
+	if(!selectedLayers.length) {
+		context.document.showMessage('Please select the layers you would like to populate.');
+		return;
+	}
+
+	//get last used location
+	var defaults = [NSUserDefaults standardUserDefaults];
+	var lastLocation = [defaults objectForKey: 'LastTableFilePickerLocation'];
+
+	//get file path
+	var filePath = Library.askForTableTSV(lastLocation);
+	if(!filePath) return;
+
+	//save last used location
+	[defaults setObject: filePath forKey: 'LastTableFilePickerLocation'];
+	[defaults synchronize];
+
+	//get root dir
+	var rootDir = [filePath stringByDeletingLastPathComponent];
+
+	//create alert
+	var alert = Library.createAlert("Populate Table", "Please configure the options below.", "icon.png");
+	
+	//add bottom buttons
+	[alert addButtonWithTitle:"Populate"];
+	[alert addButtonWithTitle:"Cancel"];
+
+	//set rows textfield as first responder
+	var alertWindow = [[alert alert] window];
+	[alertWindow setAutorecalculatesKeyViewLoop: true];
+
+	//show alert
+	var responseCode = [alert runModal];
+	if(responseCode == '1000') {
+		
+		log('populating table')	
+		
+		//load data
+		var data = Library.loadTableTSV(filePath);
+		data = Library.flattenTable(data);
+		
+		log(data);
+	}
+}
+
 function populateWithPresetHandler(_context) {
 	context = _context;
 
@@ -482,7 +536,7 @@ function insertSVGHandler(_context) {
 				var SVGImporter = [MSSVGImporter svgImporter];
 
 				//create temporary group for import
-				var container = tempIconPage.addLayerOfType('group');
+				var container = MSLayerGroup.new();
 				container.setName('__IMPORTED_SVG__');
 
 				//import svg into the container
@@ -1256,7 +1310,7 @@ function populate(data, selectedLayers, opt) {
         if (urlRegexp.test(imageUrl)) {
             
             //get image from url
-            var image = getImage(imageUrl);
+            var image = Library.getImageFromURL(imageUrl);
             
             //make sure that image was loaded successfully
             if(!image) {
@@ -1358,7 +1412,7 @@ function populate(data, selectedLayers, opt) {
             var SVGImporter = [MSSVGImporter svgImporter];
 
             //create temporary group for import
-            var container = tempIconPage.addLayerOfType('group');
+            var container = MSLayerGroup.new();
             container.setName('__IMPORTED_SVG__');
 
             //import svg into the container

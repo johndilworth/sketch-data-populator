@@ -561,7 +561,7 @@ var Library = {};
         //get layers to filter
         var layers;
         if (subLayersOnly) {
-            layers = [[rootLayer layers] array];
+            layers = [rootLayer layers];
         } else {
             layers = [rootLayer children];
         }
@@ -939,7 +939,7 @@ var Library = {};
     }
     
     
-    function createDataOptionsView() {
+    function createDataOptionsView(opt) {
 
         //create options view
         var optionsView = [[NSView alloc] initWithFrame: NSMakeRect(0, 0, 300, 110)];
@@ -950,10 +950,13 @@ var Library = {};
 
         //create randomize checkbox
         var randomizeCheckbox = createCheckbox('Randomize data order', false, NSMakeRect(0, 65, 300, 20));
-        [optionsView addSubview: randomizeCheckbox];
-
-        //set randomize checkbox state
-        [randomizeCheckbox setState: [[NSUserDefaults standardUserDefaults] objectForKey:'randomizeData']];
+        [optionsView addSubview: randomizeCheckbox];  
+        if(opt.noRandomize) {
+            
+            //set randomize checkbox state
+            [randomizeCheckbox setState: false];
+            [randomizeCheckbox setEnabled: false];
+        }
 
         //create trim checkbox
         var trimCheckbox = createCheckbox('Trim overflowing text (fixed width text layers)', false, NSMakeRect(0, 45, 300, 20));

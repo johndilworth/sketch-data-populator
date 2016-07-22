@@ -8,60 +8,6 @@
 var context;
 var selection;
 
-function populateTableHandler(_context) {
-	context = _context;
-	
-	//get user defaults
-	var defaults = [NSUserDefaults standardUserDefaults];
-
-	//get selected layers
-	var selectedLayers = Library.getSelectedLayers();
-	selection = selectedLayers;
-	if(!selectedLayers.length) {
-		context.document.showMessage('Please select the layers you would like to populate.');
-		return;
-	}
-
-	//get last used location
-	var defaults = [NSUserDefaults standardUserDefaults];
-	var lastLocation = [defaults objectForKey: 'LastTableFilePickerLocation'];
-
-	//get file path
-	var filePath = Library.askForTableTSV(lastLocation);
-	if(!filePath) return;
-
-	//save last used location
-	[defaults setObject: filePath forKey: 'LastTableFilePickerLocation'];
-	[defaults synchronize];
-
-	//get root dir
-	var rootDir = [filePath stringByDeletingLastPathComponent];
-
-	//create alert
-	var alert = Library.createAlert("Populate Table", "Please configure the options below.", "icon.png");
-	
-	//add bottom buttons
-	[alert addButtonWithTitle:"Populate"];
-	[alert addButtonWithTitle:"Cancel"];
-
-	//set rows textfield as first responder
-	var alertWindow = [[alert alert] window];
-	[alertWindow setAutorecalculatesKeyViewLoop: true];
-
-	//show alert
-	var responseCode = [alert runModal];
-	if(responseCode == '1000') {
-		
-		log('populating table')	
-		
-		//load data
-		var data = Library.loadTableTSV(filePath);
-		data = Library.flattenTable(data);
-		
-		log(data);
-	}
-}
-
 function populateWithPresetHandler(_context) {
 	context = _context;
 
@@ -728,6 +674,195 @@ function restoreTextPlaceholdersHandler(_context) {
 		//remove overrides
 		symbolInstance.setOverrides(null);
 	});
+}
+
+
+function populateTableHandler(_context) {
+	context = _context;
+	
+	//get user defaults
+	var defaults = [NSUserDefaults standardUserDefaults];
+
+	//get selected layers
+	var selectedLayers = Library.getSelectedLayers();
+	selection = selectedLayers;
+	if(selectedLayers.length != 1) {
+		context.document.showMessage('Please select the table you would like to populate.');
+		return;
+	}
+	
+	//get table
+	var table = selectedLayers[0];
+
+	//get last used location
+	var defaults = [NSUserDefaults standardUserDefaults];
+	var lastLocation = [defaults objectForKey: 'LastTableFilePickerLocation'];
+
+	//get file path
+	var filePath = Library.askForTableTSV(lastLocation);
+	if(!filePath) return;
+
+	//save last used location
+	[defaults setObject: filePath forKey: 'LastTableFilePickerLocation'];
+	[defaults synchronize];
+
+	//get root dir
+	var rootDir = [filePath stringByDeletingLastPathComponent];
+
+	//create alert
+	var alert = Library.createAlert("Populate Table", "Please configure the options below.", "icon.png");
+	
+	//create data options view
+	var dataOptionsView = Library.createDataOptionsView({
+		noRandomize: true
+	});
+	[alert addAccessoryView: dataOptionsView.view];
+	
+	//add bottom buttons
+	[alert addButtonWithTitle:"Populate"];
+	[alert addButtonWithTitle:"Cancel"];
+
+	//set rows textfield as first responder
+	var alertWindow = [[alert alert] window];
+	[alertWindow setAutorecalculatesKeyViewLoop: true];
+
+	//show alert
+	var responseCode = [alert runModal];
+	if(responseCode == '1000') {
+		
+		//load data
+		var data = Library.loadTableTSV(filePath);
+		data = Library.flattenTable(data);
+		
+		//get trim checkbox state
+		var trimCheckbox = dataOptionsView.trimCheckbox;
+		var trimText = Number([trimCheckbox state]);
+
+		//get ellipsis checkbox state
+		var ellipsisCheckbox = dataOptionsView.ellipsisCheckbox;
+		var insertEllipsis = Number([ellipsisCheckbox state]);
+
+		//get default substitute
+		var substituteTextField = dataOptionsView.substituteTextField;
+		var defaultSubstitute = [substituteTextField stringValue];
+		
+		//save data options
+		[defaults setObject: trimText forKey: 'trimText'];
+		[defaults setObject: insertEllipsis forKey: 'insertEllipsis'];
+		[defaults setObject: defaultSubstitute forKey: 'defaultSubstitute'];
+		
+		//sync defaults
+		[defaults synchronize];
+	
+		//populate
+		populateTable(data, table, {
+			rootDir: rootDir,
+			randomizeData: false,
+			trimText: trimText,
+			insertEllipsis: insertEllipsis,
+			defaultSubstitute: defaultSubstitute
+		});
+	}
+}
+
+
+function populateTable(data, table, opt) {
+	
+	//populate row groups
+	var rowGroupsContainer = Library.findLayerInLayer('rows', true, 'MSLayerGroup', table, true, null);
+	populateRowGroups(rowGroupsContainer, data.rowGroups);
+	
+	//populate column groups
+	var columnGroupsContainer = Library.findLayerInLayer('columns', true, 'MSLayerGroup', table, true, null);
+	populateColumnGroups(columnGroupsContainer, data.columnGroups);	
+	
+	//populate cells
+	var cellsContainer = Library.findLayerInLayer('cells', true, 'MSLayerGroup', table, true, null);
+	var rows = Library.findLayersInLayer('row', true, 'MSLayerGroup', cellsContainer, true, null);
+	for(var i = 0; i < rows.length; i++) {
+		var row = rows[i];
+		var rowData = data.cells[i];
+		if(!rowData) break;
+		
+		//get all cells for row
+		var cells = Library.findLayersInLayer('cell', true, 'MSLayerGroup', row, true, null);
+		for(var j = 0; j < cells.length; j++) {
+			var cell = cells[j];
+			var cellData = rowData[j];
+			if(!cellData) break;
+			
+			//populate cell
+			populate(cellData, [cell], {
+				rootDir: opt.rootDir,
+				randomizeData: opt.randomizeData,
+				trimText: opt.trimText,
+				insertEllipsis: opt.insertEllipsis,
+				defaultSubstitute: opt.defaultSubstitute
+			});
+		}
+	}
+	
+	function populateRowGroups(rowGroupsContainer, rowGroupsData) {
+		
+		//get row groups for container
+		var rowGroups = Library.findLayersInLayer('*', false, 'MSLayerGroup', rowGroupsContainer, true, null);
+		for(var i = 0; i < rowGroups.length; i++) {
+			var rowGroup = rowGroups[i];
+			var rowGroupData = rowGroupsData[i];
+			if(!rowGroupData) break;
+			
+			//get nested row groups container
+			var nestedRowGroupsContainer = Library.findLayerInLayer('groups', true, 'MSLayerGroup', rowGroup, true, null);
+			
+			//find another layers to populate
+			var rowGroupLayers = Library.findLayersInLayer('*', false, false, rowGroup, true, [nestedRowGroupsContainer]);
+			
+			//populate row group
+			populate(rowGroupData, rowGroupLayers, {
+				rootDir: opt.rootDir,
+				randomizeData: opt.randomizeData,
+				trimText: opt.trimText,
+				insertEllipsis: opt.insertEllipsis,
+				defaultSubstitute: opt.defaultSubstitute
+			});
+			
+			//populate nested row groups
+			if(nestedRowGroupsContainer) {
+				populateRowGroups(nestedRowGroupsContainer, rowGroupData.groups);
+			}
+		}
+	}
+	
+	function populateColumnGroups(columnGroupsContainer, columnGroupsData) {
+		
+		//get column groups for container
+		var columnGroups = Library.findLayersInLayer('*', false, 'MSLayerGroup', columnGroupsContainer, true, null);
+		for(var i = 0; i < columnGroups.length; i++) {
+			var columnGroup = columnGroups[i];
+			var columnGroupData = columnGroupsData[i];
+			if(!columnGroupData) break;
+						
+			//get nested column groups container
+			var nestedColumnGroupsContainer = Library.findLayerInLayer('groups', true, 'MSLayerGroup', columnGroup, true, null);
+			
+			//find another layers to populate
+			var columnGroupLayers = Library.findLayersInLayer('*', false, false, columnGroup, true, [nestedColumnGroupsContainer]);
+			
+			//populate column group
+			populate(columnGroupData, columnGroupLayers, {
+				rootDir: opt.rootDir,
+				randomizeData: opt.randomizeData,
+				trimText: opt.trimText,
+				insertEllipsis: opt.insertEllipsis,
+				defaultSubstitute: opt.defaultSubstitute
+			});
+			
+			//populate nested column groups
+			if(nestedColumnGroupsContainer) {
+				populateColumnGroups(nestedColumnGroupsContainer, columnGroupData.groups);
+			}
+		}
+	}
 }
 
 

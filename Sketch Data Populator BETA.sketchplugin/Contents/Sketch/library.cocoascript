@@ -940,7 +940,8 @@ var Library = {};
     
     
     function createDataOptionsView(opt) {
-
+        opt = opt || {};
+        
         //create options view
         var optionsView = [[NSView alloc] initWithFrame: NSMakeRect(0, 0, 300, 110)];
 

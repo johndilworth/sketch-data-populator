@@ -351,7 +351,7 @@ var Library = {};
                 //get data key
                 //data keys are always to the left of the data
                 var dataKey = table[i][dataX - 1];
-
+                
                 //find path to data
                 var path = [];
                 for (var p = 0; p < dataX - 1; p++) {
@@ -414,63 +414,78 @@ var Library = {};
     
     
     function flattenTable(data) {
-
+        
+        //get row groups
+        var rowGroups = [];
+        for(var i = 0; i < data.rows.length; i++) {
+            rowGroups = rowGroups.concat(getRowGroups(data.rows[i]));
+        }
+        
+        //get column groups
+        var columnGroups = getColumnGroups(getRootColumns(data.rows[0]));
+        
+        //get cells
+        var cells = getCells(data);
+        
+        //split cells into rows
+        var columnCount = getColumnCount(columnGroups);
+        var rowCells = [];
+        var currentRow;
+        for(var i = 0; i < cells.length; i++) {
+            if(i % columnCount == 0) {
+                currentRow = [];
+                rowCells.push(currentRow);
+            }    
+            currentRow.push(cells[i]);
+        }
+        
         return {
-            rowGroups: getRowGroups(data.rows[0]),
-            columnGroups: getColumnGroups(data.rows[0]),
-            cells: getCells(data)
+            rowGroups: rowGroups,
+            columnGroups: columnGroups,
+            cells: rowCells
         };
         
+        function getColumnCount(columnGroups) {
+            
+            var count = 0;
+            
+            for(var i = 0; i < columnGroups.length; i++) {
+                var group = columnGroups[i];
+                if(group.groups) {
+                    count += getColumnCount(group.groups);
+                }
+                else {
+                    count ++;
+                }
+            }
+            
+            return count;
+        }
         
-        function getCells(data) {
+        function getCells(data, parent) {
+            if(!parent) parent = data;
             
-            var result = {
-                columnsPerRow: 0
-            };
+            var cells = [];
             
-            //get all cells
-            var allCells = getAllCells(data, data, result);
-            
-            var rows = [];
-            var currentRow = [];
-            for(var i = 0; i < allCells.length; i++) {
-                if(i % result.columnsPerRow == 0) {
-                    currentRow = [];
-                    rows.push(currentRow);
+            if(data.rows && data.rows.length) {
+                for(var i = 0; i < data.rows.length; i++) {
+                    var row = data.rows[i];
+                    cells = cells.concat(getCells(row, data));
                 }
-                currentRow.push(allCells[i]);
+            }
+            else if(data.columns && data.columns.length) {
+                for(var i = 0; i < data.columns.length; i++) {
+                    var column = data.columns[i];
+                    cells = cells.concat(getCells(column, data));
+                }
+            }
+            else if(data.content) {
+                
+                //extract cells here
+                cells.push(data.content);
             }
             
-            return rows;
-            
-            
-            function getAllCells(data, parent, result) {
-                
-                var allCells = [];
-                
-                if(data.rows && data.rows.length) {
-                    for(var i = 0; i < data.rows.length; i++) {
-                        var row = data.rows[i];
-                        allCells = allCells.concat(getAllCells(row, data, result));
-                    }
-                }
-                else if(data.columns && data.columns.length) {
-                    for(var i = 0; i < data.columns.length; i++) {
-                        var column = data.columns[i];
-                        allCells = allCells.concat(getAllCells(column, data, result));
-                    }
-                }
-                else if(data.content) {
-                    
-                    //extract cells here
-                    allCells.push(data.content);
-                    
-                    //set columns per row
-                    result.columnsPerRow = parent.columns.length;
-                }
-                
-                return allCells;
-            }
+            return cells;
         }
         
         function getRowGroups(data) {
@@ -489,32 +504,38 @@ var Library = {};
             return groups;
         }
         
-        function getColumnGroups(data) {
-            var groups = [];
+        function getRootColumns(data) {
             
             //drill down the rows
+            var parent = data;
             while(data.rows) {
+                parent = data;
                 data = data.rows[0];
             }
             
-            if(data.columns && data.columns.length) {
+            return parent.rows;
+        }
+        
+        function getColumnGroups(data) {
+            var groups = [];
+            
+            //process all root columns
+            for(var x = 0; x < data.length; x++) {
+                var column = data[x];
+                
+                //create group
                 var group = {
-                    title: data.title
+                    title: column.title
                 };
                 groups.push(group);
-                var subGroups = [];
-                for(var i = 0; i < data.columns.length; i++) {
-                    subGroups = subGroups.concat(getColumnGroups(data.columns[i]));
+                
+                //process sub columns
+                if(column.columns && column.columns.length) {
+                    var subGroups = getColumnGroups(column.columns);
+                    if(subGroups.length) group.groups = subGroups;
                 }
-                if(subGroups.length) group.groups = subGroups;
             }
-            else if(data.content) {
-                var group = {
-                    title: data.title
-                };
-                groups.push(group);
-            }
-
+            
             return groups;
         }
     }
@@ -1096,6 +1117,5 @@ var Library = {};
             columnsMarginTextField: columnsMarginTextField
         };
     }
-
 
 })(Library);

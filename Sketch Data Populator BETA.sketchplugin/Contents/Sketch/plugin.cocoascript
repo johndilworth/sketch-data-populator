@@ -778,14 +778,14 @@ function populateTable(data, table, opt) {
 	
 	//populate cells
 	var cellsContainer = Library.findLayerInLayer('cells', true, 'MSLayerGroup', table, true, null);
-	var rows = Library.findLayersInLayer('row', true, 'MSLayerGroup', cellsContainer, true, null);
+	var rows = Library.findLayersInLayer('*', false, 'MSLayerGroup', cellsContainer, true, null);
 	for(var i = 0; i < rows.length; i++) {
 		var row = rows[i];
 		var rowData = data.cells[i];
 		if(!rowData) break;
 		
 		//get all cells for row
-		var cells = Library.findLayersInLayer('cell', true, 'MSLayerGroup', row, true, null);
+		var cells = Library.findLayersInLayer('*', false, 'MSLayerGroup', row, true, null);
 		for(var j = 0; j < cells.length; j++) {
 			var cell = cells[j];
 			var cellData = rowData[j];

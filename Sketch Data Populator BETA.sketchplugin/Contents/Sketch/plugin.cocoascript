@@ -875,25 +875,25 @@ function populate(data, selectedLayers, opt) {
     //import state
     var numberOfSelectedLayers = selectedLayers.length;
     var currentLayerIndex = 0;
-    var svgIconCount = 0;
-    var svgIconsImported = 0;
-    var svgIconsStartedImport = 0;
+    // var svgIconCount = 0;
+    // var svgIconsImported = 0;
+    // var svgIconsStartedImport = 0;
 
     //remove existing temp page
-    var existingTempPage = Library.findPageWithName('__TEMP_DATA_POPULATOR__', true);
-    if(existingTempPage) {
-        var doc = context.document;
-        doc.removePage(existingTempPage);
-    }
+    //var existingTempPage = Library.findPageWithName('__TEMP_DATA_POPULATOR__', true);
+    // if(existingTempPage) {
+    //     var doc = context.document;
+    //     doc.removePage(existingTempPage);
+    // }
 
     //prepare temporary page
-    var tempIconPage = Library.addPage('__TEMP_DATA_POPULATOR__');
+    //var tempIconPage = Library.addPage('__TEMP_DATA_POPULATOR__');
 
     //count svg icon placeholders in selection
-    for(var i = 0; i < selectedLayers.length; i++) {
-        var iconPlaceholders = Library.findLayersInLayer('{{*}}', false, 'MSShapeGroup', selectedLayers[i], false, false);
-        svgIconCount += iconPlaceholders.length;
-    }
+    // for(var i = 0; i < selectedLayers.length; i++) {
+    //     var iconPlaceholders = Library.findLayersInLayer('{{*}}', false, 'MSShapeGroup', selectedLayers[i], false, false);
+    //     svgIconCount += iconPlaceholders.length;
+    // }
 
     //populate population process
     populateSelection();
@@ -998,10 +998,10 @@ function populate(data, selectedLayers, opt) {
                 });
 
                 //process all icon placeholders
-                iconPlaceholders.forEach(function(shapeGroup) {
-                    processIconPlaceholder(shapeGroup, dataRow, opt.rootDir);
-                    svgIconsStartedImport++;
-                });
+                // iconPlaceholders.forEach(function(shapeGroup) {
+                //     processIconPlaceholder(shapeGroup, dataRow, opt.rootDir);
+                //     svgIconsStartedImport++;
+                // });
 
                 //process all color placeholders
                 colorPlaceholders.forEach(function(shapeGroup) {
@@ -1025,7 +1025,7 @@ function populate(data, selectedLayers, opt) {
 
                 //check if image or icon placeholder
                 if([selectedLayer name].indexOf('{{') > -1) {
-                    processIconPlaceholder(selectedLayer, dataRow, opt.rootDir);
+                    // processIconPlaceholder(selectedLayer, dataRow, opt.rootDir);
                 }
                 else if([selectedLayer name].indexOf('{') > -1) {
                     processImagePlaceholder(selectedLayer, dataRow, opt.rootDir);
@@ -1040,14 +1040,14 @@ function populate(data, selectedLayers, opt) {
         }
 
         //if there were no svg icons, processing is now finished
-        if(svgIconCount == 0) {
+        // if(svgIconCount == 0) {
 
-            //remove temp page
-            Library.removePage(tempIconPage);
+        //     //remove temp page
+        //     Library.removePage(tempIconPage);
 
-            //select original layers
-            Library.restoreSelection();
-        }
+        //     //select original layers
+        //     Library.restoreSelection();
+        // }
     }
 
     function findValueInDataRow(key, dataRow) {
@@ -1546,7 +1546,8 @@ function populate(data, selectedLayers, opt) {
     
 
     function processIconPlaceholder(shapeGroup, dataRow, rootDir) {
-
+    	return;
+    	
         //get shape group name
         var shapeGroupName = [shapeGroup name].toString();
 

@@ -169,6 +169,7 @@ function populateWithPresetHandler(_context) {
 			rootDir: presetParentDir,
 			randomizeData: randomizeData,
 			trimText: trimText,
+			trimLines: 1,
 			insertEllipsis: insertEllipsis,
 			defaultSubstitute: defaultSubstitute
 		});
@@ -309,6 +310,7 @@ function populateWithJSONHandler(_context) {
 			rootDir: rootDir,
 			randomizeData: randomizeData,
 			trimText: trimText,
+			trimLines: 1,
 			insertEllipsis: insertEllipsis,
 			defaultSubstitute: defaultSubstitute
 		});
@@ -357,6 +359,7 @@ function populateAgainHandler(_context) {
 		rootDir: rootDir,
 		randomizeData: randomizeData,
 		trimText: trimText,
+		trimLines: 1,
 		insertEllipsis: insertEllipsis,
 		defaultSubstitute: defaultSubstitute
 	});
@@ -759,6 +762,7 @@ function populateTableHandler(_context) {
 			rootDir: rootDir,
 			randomizeData: false,
 			trimText: trimText,
+			trimLines: 1,
 			insertEllipsis: insertEllipsis,
 			defaultSubstitute: defaultSubstitute
 		});
@@ -1054,7 +1058,8 @@ function populate(data, selectedLayers, opt) {
         return _.get(dataRow, key);
     }
 
-    function trimText(textLayer, text, insertEllipsis) {
+    function trimText(textLayer, text, insertEllipsis, lines) {
+    	if(!lines || lines < 1) lines = 1;
     	
     	//test text length on a copy of the layer
 		textLayer = Library.copyLayer(textLayer);
@@ -1083,8 +1088,8 @@ function populate(data, selectedLayers, opt) {
         var newHeight = textLayerFrame.height();
 
         //shorten text to fit
-        var didTrim = (newHeight > originalHeight);
-        while(newHeight > originalHeight) {
+        var didTrim = (newHeight > originalHeight * lines);
+        while(newHeight > originalHeight * lines) {
         	
             //trim last character
             text = text.substring(0, text.length - 1);
@@ -1105,7 +1110,7 @@ function populate(data, selectedLayers, opt) {
             newHeight = textLayerFrame.height();
 
             //make sure that ellipsis fits in the text layer
-            while(newHeight > originalHeight) {
+            while(newHeight > originalHeight * lines) {
 
                 //remove character before ellipsis
                 text = text.substring(0, text.length - 2);
@@ -1161,7 +1166,7 @@ function populate(data, selectedLayers, opt) {
 	        
 	        //check if text layer has fixed size and trimming activated
 	        if(textLayer.textBehaviour() == 1 && opt.trimText) {
-	        	mergedText = trimText(textLayer, mergedText, opt.insertEllipsis);
+	        	mergedText = trimText(textLayer, mergedText, opt.insertEllipsis, opt.trimLines);
 	        }
 	    }
 	    
@@ -1220,7 +1225,7 @@ function populate(data, selectedLayers, opt) {
         	
         	//check if text layer has fixed size and trimming activated
 	        if(textLayer.textBehaviour() == 1 && opt.trimText) {
-	        	mergedText = trimText(textLayer, mergedText, opt.insertEllipsis);
+	        	mergedText = trimText(textLayer, mergedText, opt.insertEllipsis, opt.trimLines);
 	        }
 	    }
         

@@ -169,7 +169,6 @@ function populateWithPresetHandler(_context) {
 			rootDir: presetParentDir,
 			randomizeData: randomizeData,
 			trimText: trimText,
-			trimLines: 1,
 			insertEllipsis: insertEllipsis,
 			defaultSubstitute: defaultSubstitute
 		});
@@ -310,7 +309,6 @@ function populateWithJSONHandler(_context) {
 			rootDir: rootDir,
 			randomizeData: randomizeData,
 			trimText: trimText,
-			trimLines: 1,
 			insertEllipsis: insertEllipsis,
 			defaultSubstitute: defaultSubstitute
 		});
@@ -359,7 +357,6 @@ function populateAgainHandler(_context) {
 		rootDir: rootDir,
 		randomizeData: randomizeData,
 		trimText: trimText,
-		trimLines: 1,
 		insertEllipsis: insertEllipsis,
 		defaultSubstitute: defaultSubstitute
 	});
@@ -762,7 +759,6 @@ function populateTableHandler(_context) {
 			rootDir: rootDir,
 			randomizeData: false,
 			trimText: trimText,
-			trimLines: 1,
 			insertEllipsis: insertEllipsis,
 			defaultSubstitute: defaultSubstitute
 		});
@@ -1166,7 +1162,7 @@ function populate(data, selectedLayers, opt) {
 	        
 	        //check if text layer has fixed size and trimming activated
 	        if(textLayer.textBehaviour() == 1 && opt.trimText) {
-	        	mergedText = trimText(textLayer, mergedText, opt.insertEllipsis, opt.trimLines);
+	        	mergedText = trimText(textLayer, mergedText, opt.insertEllipsis, getLineCountForTrim(textLayer));
 	        }
 	    }
 	    
@@ -1225,7 +1221,7 @@ function populate(data, selectedLayers, opt) {
         	
         	//check if text layer has fixed size and trimming activated
 	        if(textLayer.textBehaviour() == 1 && opt.trimText) {
-	        	mergedText = trimText(textLayer, mergedText, opt.insertEllipsis, opt.trimLines);
+	        	mergedText = trimText(textLayer, mergedText, opt.insertEllipsis, getLineCountForTrim(textLayer));
 	        }
 	    }
         
@@ -1239,6 +1235,23 @@ function populate(data, selectedLayers, opt) {
         
         //add override for layer
         overrides.setValue_forKey(mergedText, layerId);
+    }
+    
+    
+    function getLineCountForTrim(textLayer) {
+    	
+    	var lineCount = 1;
+    	
+    	//get name to check for line count
+    	var name = String(textLayer.name());
+    	
+    	//specified line count
+		var specifiedLineCount = name.match(/\|\*\d+/g);
+		if(specifiedLineCount) {
+			lineCount = Number(String(specifiedLineCount).substring(2));
+		}
+    	
+    	return lineCount;
     }
     
     

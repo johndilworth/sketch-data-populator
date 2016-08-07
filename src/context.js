@@ -8,10 +8,10 @@
 let context = null
 
 //set and get context via the same function
-export default function(newContext) {
+export default function (newContext) {
 
   //set new context
-  if(newContext) {
+  if (newContext) {
     context = newContext
   }
 

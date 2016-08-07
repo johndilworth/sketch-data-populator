@@ -12,8 +12,8 @@
  * @returns {Array}
  */
 export function convertToJSArray(nativeArray) {
-  var length = nativeArray.count();
-  var jsArray = [];
+  let length = nativeArray.count();
+  let jsArray = [];
 
   while (length--) {
     jsArray.push(nativeArray.objectAtIndex(length));
@@ -31,7 +31,7 @@ export function convertToJSArray(nativeArray) {
 export function copyLayer(layer) {
 
   //create duplicate
-  var layerCopy = layer.duplicate();
+  let layerCopy = layer.duplicate();
 
   //remove duplicate from parent
   layerCopy.removeFromParent();
@@ -62,20 +62,46 @@ export function randomInteger(min, max) {
 export function mergeStringWithValues(string, values) {
 
   //get properties in values
-  var properties = Object.keys(values);
+  let properties = Object.keys(values);
 
   properties.forEach(function (property) {
 
     //escape regex
-    var sanitisedProperty = property.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+    let sanitisedProperty = property.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
     sanitisedProperty = '{' + sanitisedProperty + '}';
 
     //build regex
-    var exp = RegExp(sanitisedProperty, 'g');
+    let exp = RegExp(sanitisedProperty, 'g');
 
     //replace instances of property placeholder with value
     string = string.replace(exp, values[property]);
   });
 
   return string;
+}
+
+
+/**
+ * Parses the string and returns the value of the correct type.
+ *
+ * @param {string} value
+ * @returns {*}
+ */
+export function parsePrimitives(value) {
+
+    if (value == '') {
+      return value
+    } else if (value == 'true' || value == '1') {
+      value = true
+    } else if (value == 'false' || value == '0') {
+      value = false
+    } else if (value == 'null') {
+      value = null
+    } else if (value == 'undefined') {
+      value = undefined
+    } else if (!isNaN(value) && value != '') {
+      value = parseFloat(value)
+    }
+
+    return value
 }

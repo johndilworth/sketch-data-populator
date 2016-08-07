@@ -15,5 +15,5 @@ export const alias = ''
  * @returns {string}
  */
 export function apply(string, param) {
-  return string.toUpperCase()
+  return String(string).toUpperCase()
 }

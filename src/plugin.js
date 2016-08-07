@@ -24,7 +24,7 @@ export const HKSketchFusionExtension = {
       'populateTable',
       'populateAgain',
       'revealPresets',
-      'restorePlaceholders'
+      'clearLayers'
     ]
   },
   commands: {
@@ -53,10 +53,10 @@ export const HKSketchFusionExtension = {
       shortcut: '',
       run: commands.revealPresets
     },
-    restorePlaceholders: {
-      name: 'Restore Placeholders',
+    clearLayers: {
+      name: 'Clear Layers',
       shortcut: '',
-      run: commands.restorePlaceholders
+      run: commands.clearLayers
     }
   }
 }

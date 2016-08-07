@@ -9,23 +9,34 @@ import Context from '../context'
 import * as Utils from './utils';
 
 
+export const PAGE = 'MSPage'
+export const ARTBOARD = 'MSArtboardGroup'
+export const GROUP = 'MSLayerGroup'
+export const TEXT = 'MSTextLayer'
+export const SHAPE = 'MSShapeGroup'
+export const BITMAP = 'MSBitmapLayer'
+export const SYMBOL = 'MSSymbolInstance'
+export const SYMBOL_MASTER = 'MSSymbolMaster'
+export const ANY = null
+
+
 /**
  * Finds layers with specified name in the root layer. The name can be set to '*'
  * and exactMatch to false, in which case all layers are returned.
  *
  * @param {string} name
- * @param {bool} exactMatch
+ * @param {boolean} exactMatch
  * @param {string} type
  * @param {MSLayer} rootLayer
- * @param {bool} subLayersOnly
+ * @param {boolean} subLayersOnly
  * @param {Array} layersToExclude
  * @returns {Array}
  */
 export function findLayersInLayer(name, exactMatch, type, rootLayer, subLayersOnly, layersToExclude) {
 
   //create predicate format
-  var formatRules = ['(name != NULL)']
-  var args = []
+  let formatRules = ['(name != NULL)']
+  let args = []
 
   //name
   if (name) {
@@ -54,13 +65,13 @@ export function findLayersInLayer(name, exactMatch, type, rootLayer, subLayersOn
   }
 
   //prepare format string
-  var formatString = formatRules.join(' AND ')
+  let formatString = formatRules.join(' AND ')
 
   //create predicate
-  var predicate = NSPredicate.predicateWithFormat_argumentArray(formatString, args)
+  let predicate = NSPredicate.predicateWithFormat_argumentArray(formatString, args)
 
   //get layers to filter
-  var layers
+  let layers
   if (subLayersOnly) {
     layers = rootLayer.layers()
   } else {
@@ -68,7 +79,7 @@ export function findLayersInLayer(name, exactMatch, type, rootLayer, subLayersOn
   }
 
   //perform query
-  var queryResult = layers.filteredArrayUsingPredicate(predicate)
+  let queryResult = layers.filteredArrayUsingPredicate(predicate)
 
   //return result as js array
   return Utils.convertToJSArray(queryResult)
@@ -79,15 +90,15 @@ export function findLayersInLayer(name, exactMatch, type, rootLayer, subLayersOn
  * Finds a single layer in the root layer.
  *
  * @param {string} name
- * @param {bool} exactMatch
+ * @param {boolean} exactMatch
  * @param {string} type
  * @param {MSLayer} rootLayer
- * @param {bool} subLayersOnly
+ * @param {boolean} subLayersOnly
  * @param {Array} layersToExclude
  * @returns {MSLayer}
  */
 export function findLayerInLayer(name, exactMatch, type, rootLayer, subLayersOnly, layersToExclude) {
-  var result = findLayersInLayer(name, exactMatch, type, rootLayer, subLayersOnly, layersToExclude)
+  let result = findLayersInLayer(name, exactMatch, type, rootLayer, subLayersOnly, layersToExclude)
 
   //return first layer in result
   if (result.length) return result[0]
@@ -98,15 +109,15 @@ export function findLayerInLayer(name, exactMatch, type, rootLayer, subLayersOnl
  * Finds a page with the specified name in the current document.
  *
  * @param {string} name
- * @param {bool} fullMatch
+ * @param {boolean} fullMatch
  * @returns {MSPage}
  */
 export function findPageWithName(name, fullMatch) {
 
-  var doc = MSDocument.currentDocument()
-  var pages = jsArray(doc.pages())
-  for (var i = 0; i < pages.length; i++) {
-    var currentPage = pages[i]
+  let doc = MSDocument.currentDocument()
+  let pages = jsArray(doc.pages())
+  for (let i = 0; i < pages.length; i++) {
+    let currentPage = pages[i]
 
     //if page matches name
     if (fullMatch) {
@@ -155,12 +166,15 @@ export function getSelectedLayers() {
  */
 export function selectLayers(layers) {
 
-  //deselect current selection
-  Context().document.deselectAllLayers()
+  //deselect all layers
+  let selectedLayers = getSelectedLayers()
+  selectedLayers.forEach((layer) => {
+    layer.select_byExpandingSelection(false, false)
+  })
 
   //select layers
   layers.forEach(function (layer) {
-    layer.select_byExpandingSelection(true, false)
+    layer.select_byExpandingSelection(true, true)
   })
 }
 
@@ -174,13 +188,13 @@ export function selectLayers(layers) {
 export function addPage(name) {
 
   //get doc
-  var doc = Context().document
+  let doc = Context().document
 
   //get current page
-  var currentPage = doc.currentPage()
+  let currentPage = doc.currentPage()
 
   //create new page
-  var page = doc.addBlankPage()
+  let page = doc.addBlankPage()
   page.setName(name)
 
   //make current page active again
@@ -198,10 +212,10 @@ export function addPage(name) {
 export function removePage(page) {
 
   //get doc
-  var doc = Context().document
+  let doc = Context().document
 
   //get current page
-  var currentPage = doc.currentPage()
+  let currentPage = doc.currentPage()
 
   //remove page
   doc.removePage(page)
@@ -215,7 +229,7 @@ export function removePage(page) {
  * Checks if the layer is a symbol instance.
  *
  * @param {MSLayer} layer
- * @returns {bool}
+ * @returns {boolean}
  */
 export function isSymbolInstance(layer) {
   return layer.isKindOfClass(MSSymbolInstance.class())
@@ -226,7 +240,7 @@ export function isSymbolInstance(layer) {
  * Checks if the layer is a layer group.
  *
  * @param {MSLayer} layer
- * @returns {bool}
+ * @returns {boolean}
  */
 export function isLayerGroup(layer) {
   return layer.isKindOfClass(MSLayerGroup.class()) && !layer.isKindOfClass(MSShapeGroup.class())
@@ -237,7 +251,7 @@ export function isLayerGroup(layer) {
  * Checks if the layer is a shape/shape group.
  *
  * @param {MSLayer} layer
- * @returns {bool}
+ * @returns {boolean}
  */
 export function isLayerShapeGroup(layer) {
   return layer.isKindOfClass(MSShapeGroup.class())
@@ -245,10 +259,21 @@ export function isLayerShapeGroup(layer) {
 
 
 /**
+ * Checks if the layer is a bitmap layer.
+ *
+ * @param {MSLayer} layer
+ * @returns {boolean}
+ */
+export function isLayerBitmap(layer) {
+  return layer.isKindOfClass(MSBitmapLayer.class())
+}
+
+
+/**
  * Checks if the layer is a text layer.
  *
  * @param {MSLayer} layer
- * @returns {bool}
+ * @returns {boolean}
  */
 export function isLayerText(layer) {
   return layer.isKindOfClass(MSTextLayer.class())
@@ -259,7 +284,7 @@ export function isLayerText(layer) {
  * Checks if the layer is an artboard.
  *
  * @param {MSLayer} layer
- * @returns {bool}
+ * @returns {boolean}
  */
 export function isArtboard(layer) {
   return layer.isKindOfClass(MSArtboardGroup.class())
@@ -300,11 +325,11 @@ export function createGrid(selectedLayers, opt) {
   }
 
   //get first layer (most top left)
-  var layer = selectedLayers[0]
-  var smallestX = selectedLayers[0].frame().x()
-  var smallestY = selectedLayers[0].frame().y()
-  for (var i = 0; i < selectedLayers.length; i++) {
-    var tempLayer = selectedLayers[i]
+  let layer = selectedLayers[0]
+  let smallestX = selectedLayers[0].frame().x()
+  let smallestY = selectedLayers[0].frame().y()
+  for (let i = 0; i < selectedLayers.length; i++) {
+    let tempLayer = selectedLayers[i]
     if (tempLayer.frame().x() < smallestX || tempLayer.frame().y() < smallestY) {
       smallestX = tempLayer.frame().x()
       smallestY = tempLayer.frame().y()
@@ -313,9 +338,9 @@ export function createGrid(selectedLayers, opt) {
   }
 
   //arrange copies of the first layer
-  var layerWidth = layer.frame().width()
-  var layerHeight = layer.frame().height()
-  var layerParent = layer.parentGroup()
+  let layerWidth = layer.frame().width()
+  let layerHeight = layer.frame().height()
+  let layerParent = layer.parentGroup()
   if (!layerParent) layerParent = layer.parentArtboard()
   if (!layerParent) layerParent = layer.parentPage()
 
@@ -325,23 +350,23 @@ export function createGrid(selectedLayers, opt) {
   })
 
   //keep track of original position
-  var startX = layer.frame().x()
-  var startY = layer.frame().y()
+  let startX = layer.frame().x()
+  let startY = layer.frame().y()
 
   //store new selected layers
-  var newSelectedLayers = []
+  let newSelectedLayers = []
 
   //create rows
-  for (var i = 0; i < opt.rowsCount; i++) {
+  for (let i = 0; i < opt.rowsCount; i++) {
 
     //set row y
-    var y = startY + (i * (layerHeight + opt.rowsMargin))
+    let y = startY + (i * (layerHeight + opt.rowsMargin))
 
     //create columns
-    for (var j = 0; j < opt.columnsCount; j++) {
+    for (let j = 0; j < opt.columnsCount; j++) {
 
       //create layer copy
-      var copy = Utils.copyLayer(layer)
+      let copy = Utils.copyLayer(layer)
 
       //add to parent layer
       layerParent.addLayers([copy])
@@ -350,7 +375,7 @@ export function createGrid(selectedLayers, opt) {
       newSelectedLayers.push(copy)
 
       //set column x
-      var x = startX + (j * (layerWidth + opt.columnsMargin))
+      let x = startX + (j * (layerWidth + opt.columnsMargin))
 
       //position copy
       copy.frame().setX(x)

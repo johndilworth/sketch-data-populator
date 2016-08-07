@@ -96,13 +96,22 @@ gulp.task('assemble-plugin-resources',function(callback) {
         .pipe(gulp.dest(path.join(__dirname,'dist',normalizePluginFileName(currentManifest.bundleName || currentManifest.name)+'.sketchplugin','Contents/Resources')));
 });
 
+gulp.task('assemble-plugin-presets',function(callback) {
+    function normalizePluginFileName(name) {
+        return name;
+    }
+
+    return gulp.src('src/presets/**/*.*')
+        .pipe(gulp.dest(path.join(__dirname,'dist',normalizePluginFileName(currentManifest.bundleName || currentManifest.name)+'.sketchplugin','Presets')));
+});
+
 gulp.task('install-plugin',function(){
     return gulp.src("dist/**/*.*")
         .pipe(gulp.dest(SKETCH_PLUGINS_FOLDER));
 });
 
 gulp.task('build',function(callback) {
-    runSequence('clean','prepare-folders','bundle','prepare-manifest','assemble-plugin-bundle','assemble-plugin-resources','install-plugin',callback);
+    runSequence('clean','prepare-folders','bundle','prepare-manifest','assemble-plugin-bundle','assemble-plugin-resources','assemble-plugin-presets','install-plugin',callback);
 });
 
 gulp.task('bundle',function() {
@@ -115,9 +124,9 @@ gulp.task('bundle',function() {
         debug: false
     });
 
-    bundler.transform(babelify.configure({
+    bundler.transform({ global: true }, babelify.configure({
         presets: ["es2015"],
-        plugins: [["babel-plugin-sketch-manifest-processor",ManifestProcessorOptions]]
+        plugins: ["transform-object-rest-spread", ["babel-plugin-sketch-manifest-processor",ManifestProcessorOptions]]
     }));
 
     return bundler.bundle()

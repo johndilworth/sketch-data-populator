@@ -15,8 +15,11 @@ import Context from '../context'
  * @returns {string}
  */
 export function askForJSON(path) {
-  var panel = NSOpenPanel.openPanel()
 
+  //create panel
+  let panel = NSOpenPanel.openPanel()
+
+  //set panel properties
   panel.setTitle("Select JSON")
   panel.setMessage("Please select the JSON file you'd like to use.")
   panel.setPrompt("Select")
@@ -27,6 +30,7 @@ export function askForJSON(path) {
   panel.setShowsHiddenFiles(false)
   panel.setExtensionHidden(false)
 
+  //set initial panel path
   if (path) {
     panel.setDirectoryURL(NSURL.fileURLWithPath(path))
   }
@@ -34,7 +38,8 @@ export function askForJSON(path) {
     panel.setDirectoryURL(NSURL.fileURLWithPath('/Users/' + NSUserName()))
   }
 
-  var pressedButton = panel.runModal()
+  //show panel
+  let pressedButton = panel.runModal()
   if (pressedButton == NSOKButton) {
     return panel.URL().path()
   }
@@ -48,8 +53,11 @@ export function askForJSON(path) {
  * @returns {string}
  */
 export function askForTableTSV(path) {
-  var panel = NSOpenPanel.openPanel()
 
+  //create panel
+  let panel = NSOpenPanel.openPanel()
+
+  //set panel properties
   panel.setTitle("Select TSV")
   panel.setMessage("Please select the TSV file you'd like to use to populate the table.")
   panel.setPrompt("Select")
@@ -60,6 +68,7 @@ export function askForTableTSV(path) {
   panel.setShowsHiddenFiles(false)
   panel.setExtensionHidden(false)
 
+  //set initial panel path
   if (path) {
     panel.setDirectoryURL(NSURL.fileURLWithPath(path))
   }
@@ -67,7 +76,8 @@ export function askForTableTSV(path) {
     panel.setDirectoryURL(NSURL.fileURLWithPath('/Users/' + NSUserName()))
   }
 
-  var pressedButton = panel.runModal()
+  //show panel
+  let pressedButton = panel.runModal()
   if (pressedButton == NSOKButton) {
     return panel.URL().path()
   }
@@ -93,10 +103,10 @@ export function readFileAsText(path) {
 export function getPresetsDir() {
 
   //get script path
-  var scriptPath = Context().scriptPath
+  let scriptPath = Context().scriptPath
 
   //get presets dir path
-  var presetsDirPath = scriptPath.stringByAppendingPathComponent('/../../../Presets/')
+  let presetsDirPath = scriptPath.stringByAppendingPathComponent('/../../../Presets/')
   presetsDirPath = presetsDirPath.stringByStandardizingPath()
 
   return presetsDirPath
@@ -111,29 +121,30 @@ export function getPresetsDir() {
 export function loadPresets() {
 
   //get presets path
-  var presetsPath = getPresetsDir()
+  let presetsPath = getPresetsDir()
 
   //create file enumerator for presetsPath
-  var url = NSURL.fileURLWithPath(presetsPath)
-  var enumerator = NSFileManager.defaultManager().enumeratorAtURL_includingPropertiesForKeys_options_errorHandler(url, [NSURLIsDirectoryKey, NSURLNameKey, NSURLPathKey], NSDirectoryEnumerationSkipsHiddenFiles, null)
+  let url = NSURL.fileURLWithPath(presetsPath)
+  let enumerator = NSFileManager.defaultManager().enumeratorAtURL_includingPropertiesForKeys_options_errorHandler(url, [NSURLIsDirectoryKey, NSURLNameKey, NSURLPathKey], NSDirectoryEnumerationSkipsHiddenFiles, null)
 
-  var presets = []
+  let presets = []
+  let fileUrl
   while (fileUrl = enumerator.nextObject()) {
 
     //make sure that file is JSON
     if (fileUrl.pathExtension().isEqualToString('json')) {
 
       //make sure it's a file
-      var isDir = MOPointer.alloc().init()
+      let isDir = MOPointer.alloc().init()
       fileUrl.getResourceValue_forKey_error(isDir, NSURLIsDirectoryKey, null)
       if (!Number(isDir.value())) {
 
         //get relative path for preset
-        var presetPath = fileUrl.path()
-        var presetDisplayPath = presetPath.stringByReplacingOccurrencesOfString_withString(presetsPath + '/', '')
+        let presetPath = fileUrl.path()
+        let presetDisplayPath = presetPath.stringByReplacingOccurrencesOfString_withString(presetsPath + '/', '')
 
         //create preset structure
-        var preset = {
+        let preset = {
           name: String(presetDisplayPath.stringByDeletingPathExtension()),
           path: String(fileUrl.path())
         };
@@ -149,21 +160,51 @@ export function loadPresets() {
 
 
 /**
- * Downloads the image from the specified URL and creates an NSImage instance.
+ * Downloads the image from the specified remote URL and creates an NSImage instance.
  *
  * @param {string} urlString
  * @returns {NSImage}
  */
-export function getImageFromURL(urlString) {
+export function getImageFromRemoteURL(urlString) {
 
   //get data from url
-  var url = NSURL.URLWithString(urlString)
-  var data = url.resourceDataUsingCache(false)
+  let url = NSURL.URLWithString(urlString)
+  let data = url.resourceDataUsingCache(false)
   if (!data) return
 
   //create image from data
-  var image = NSImage.alloc().initWithData(data)
+  let image = NSImage.alloc().initWithData(data)
   return image
+}
+
+
+/**
+ * Loads the image from the specified local URL and creates an NSImage instance.
+ *
+ * @param {string} urlString
+ * @returns {NSImage}
+ */
+export function getImageFromLocalURL(urlString) {
+
+  //read image content from file
+  let fileManager = NSFileManager.defaultManager()
+  if (fileManager.fileExistsAtPath(urlString)) {
+    return NSImage.alloc().initWithContentsOfFile(urlString)
+  }
+}
+
+
+/**
+ * Creates an MSImageData instance from NSImage.
+ *
+ * @param {NSImage} image
+ * @returns {MSImageData}
+ */
+export function getImageData(image) {
+  if (!image) return
+
+  //create image data with image
+  return MSImageData.alloc().initWithImage_convertColorSpace(image, false)
 }
 
 
@@ -176,10 +217,10 @@ export function getImageFromURL(urlString) {
 export function loadJSONData(path) {
 
   //load contents
-  var contents = readFileAsText(path)
+  let contents = readFileAsText(path)
 
   //get data from JSON
-  var data
+  let data
   try {
     data = JSON.parse(contents)
   }
@@ -197,24 +238,128 @@ export function loadJSONData(path) {
  *
  * @param {string} path
  * @returns {Object}
+ *
+ * Example table object:
+ * {
+ *   "rows":[
+ *     {
+ *       "title":"TEAM 1",
+ *       "rows":[
+ *         {
+ *           "title":"Peter",
+ *           "rows":[ TODO: this should be columns, not rows
+ *             {
+ *               "title":"QUARTER 1",
+ *               "columns":[
+ *                 {
+ *                   "title":"January",
+ *                   "content":{
+ *                     "value":"$10,000.00"
+ *                   }
+ *                 },
+ *                 {
+ *                   "title":"February",
+ *                   "content":{
+ *                     "value":"$10,266.00"
+ *                   }
+ *                 },
+ *                 {
+ *                   "title":"March",
+ *                   "content":{
+ *                     "value":"$5,666.00"
+ *                   }
+ *                 }
+ *               ]
+ *             }
+ *           ]
+ *         },
+ *         {
+ *           "title":"Paul",
+ *           "rows":[
+ *             {
+ *               "title":"QUARTER 1",
+ *               "columns":[
+ *                 {
+ *                   "title":"January",
+ *                   "content":{
+ *                     "value":"$6,683.00",
+ *                     "additional":"30.00%"
+ *                   }
+ *                 },
+ *                 {
+ *                   "title":"February",
+ *                   "content":{
+ *                     "value":"$8,779.00",
+ *                     "additional":"34.00%"
+ *                   }
+ *                 },
+ *                 {
+ *                   "title":"March",
+ *                   "content":{
+ *                     "value":"$7,889.00",
+ *                     "additional":"55.00%"
+ *                   }
+ *                 }
+ *               ]
+ *             }
+ *           ]
+ *         },
+ *         {
+ *           "title":"Mary",
+ *           "rows":[
+ *             {
+ *               "title":"QUARTER 1",
+ *               "columns":[
+ *                 {
+ *                   "title":"January",
+ *                   "content":{
+ *                     "label":"Revenue",
+ *                     "value":"$12,334.00",
+ *                     "additional":"30.00%"
+ *                   }
+ *                 },
+ *                 {
+ *                   "title":"February",
+ *                   "content":{
+ *                     "label":"Revenue",
+ *                     "value":"$8,999.00",
+ *                     "additional":"30.00%"
+ *                   }
+ *                 },
+ *                 {
+ *                   "title":"March",
+ *                   "content":{
+ *                     "label":"Revenue",
+ *                     "value":"$11,334.00",
+ *                     "additional":"30.00%"
+ *                   }
+ *                 }
+ *               ]
+ *             }
+ *           ]
+ *         }
+ *       ]
+ *     }
+ *   ]
+ * }
  */
 export function loadTableTSV(path) {
 
   //load contents
-  var data = readFileAsText(path)
+  let data = readFileAsText(path)
 
   //create 2d table array from tsv
-  var table = []
+  let table = []
 
   //split into rows
-  var rowsData = data.split(/\n/g)
+  let rowsData = data.split(/\n/g)
   rowsData.forEach(function (rowData) {
 
     //prepare row
-    var row = []
+    let row = []
 
     //split into columns
-    var columnsData = rowData.split(/\t/g)
+    let columnsData = rowData.split(/\t/g)
     columnsData.forEach(function (columnData) {
       columnData = columnData.replace('\r', '').trim()
 
@@ -227,8 +372,8 @@ export function loadTableTSV(path) {
   })
 
   //find x and y indexes of table data start
-  var dataX = 0
-  var dataY = 0
+  let dataX = 0
+  let dataY = 0
   while (!table[0][dataX].length) {
     dataX++
   }
@@ -237,13 +382,13 @@ export function loadTableTSV(path) {
   }
 
   //get data width and height
-  var dataWidth = table[0].length - dataX
-  var dataHeight = table.length - dataY
+  let dataWidth = table[0].length - dataX
+  let dataHeight = table.length - dataY
 
   //fill missing vertical table group values
-  for (var i = 0; i < dataX - 1; i++) {
-    var lastPresentValue = null
-    for (var j = dataY; j < dataY + dataHeight; j++) {
+  for (let i = 0; i < dataX - 1; i++) {
+    let lastPresentValue = null
+    for (let j = dataY; j < dataY + dataHeight; j++) {
       if (table[j][i].length) {
         lastPresentValue = table[j][i]
       } else {
@@ -253,9 +398,9 @@ export function loadTableTSV(path) {
   }
 
   //fill missing horizontal table group values
-  for (var i = 0; i < dataY; i++) {
-    var lastPresentValue = null
-    for (var j = dataX; j < dataX + dataWidth; j++) {
+  for (let i = 0; i < dataY; i++) {
+    let lastPresentValue = null
+    for (let j = dataX; j < dataX + dataWidth; j++) {
       if (table[i][j].length) {
         lastPresentValue = table[i][j]
       } else {
@@ -265,28 +410,28 @@ export function loadTableTSV(path) {
   }
 
   //create grouped table of horizontal entries
-  var groupedTable = {
+  let groupedTable = {
     rows: []
   }
-  for (var i = dataY; i < dataY + dataHeight; i++) {
-    for (var j = dataX; j < dataX + dataWidth; j++) {
+  for (let i = dataY; i < dataY + dataHeight; i++) {
+    for (let j = dataX; j < dataX + dataWidth; j++) {
 
       //get data for table cell
-      var data = table[i][j]
+      let data = table[i][j]
 
       //get data key
       //data keys are always to the left of the data
-      var dataKey = table[i][dataX - 1]
+      let dataKey = table[i][dataX - 1]
 
       //find path to data
-      var path = []
-      for (var p = 0; p < dataX - 1; p++) {
+      let path = []
+      for (let p = 0; p < dataX - 1; p++) {
         path.push({
           title: table[i][p],
           type: 'row'
         })
       }
-      for (var p = 0; p < dataY; p++) {
+      for (let p = 0; p < dataY; p++) {
         path.push({
           title: table[p][j],
           type: 'column'
@@ -294,12 +439,12 @@ export function loadTableTSV(path) {
       }
 
       //create path structure
-      var parent = groupedTable.rows;
-      for (var p = 0; p < path.length; p++) {
+      let parent = groupedTable.rows;
+      for (let p = 0; p < path.length; p++) {
 
         //find existing child in parent with same title
-        var existingChild = null
-        for (var q = 0; q < parent.length; q++) {
+        let existingChild = null
+        for (let q = 0; q < parent.length; q++) {
           if (parent[q].title == path[p].title) {
             existingChild = parent[q]
             break
@@ -313,7 +458,7 @@ export function loadTableTSV(path) {
         } else {
 
           //prepare new child that will become next parent
-          var newChild = {
+          let newChild = {
             title: path[p].title
           }
 
@@ -344,26 +489,107 @@ export function loadTableTSV(path) {
  *
  * @param {Object} data
  * @returns {Object}
+ *
+ * Example flattened table:
+ *
+ * {
+ *   "rowGroups":[
+ *     {
+ *       "title":"TEAM 1",
+ *       "groups":[
+ *         {
+ *           "title":"Peter"
+ *         },
+ *         {
+ *           "title":"Paul"
+ *         },
+ *         {
+ *           "title":"Mary"
+ *         }
+ *       ]
+ *     }
+ *   ],
+ *   "columnGroups":[
+ *     {
+ *       "title":"QUARTER 1",
+ *       "groups":[
+ *         {
+ *           "title":"January"
+ *         },
+ *         {
+ *           "title":"February"
+ *         },
+ *         {
+ *           "title":"March"
+ *         }
+ *       ]
+ *     }
+ *   ],
+ *   "cells":[
+ *     [
+ *       {
+ *         "value":"$10,000.00"
+ *       },
+ *       {
+ *         "value":"$10,266.00"
+ *       },
+ *       {
+ *         "value":"$5,666.00"
+ *       }
+ *     ],
+ *     [
+ *       {
+ *         "value":"$6,683.00",
+ *         "additional":"30.00%"
+ *       },
+ *       {
+ *         "value":"$8,779.00",
+ *         "additional":"34.00%"
+ *       },
+ *       {
+ *         "value":"$7,889.00",
+ *         "additional":"55.00%"
+ *       }
+ *     ],
+ *     [
+ *       {
+ *         "label":"Revenue",
+ *         "value":"$12,334.00",
+ *         "additional":"30.00%"
+ *       },
+ *       {
+ *         "label":"Revenue",
+ *         "value":"$8,999.00",
+ *         "additional":"30.00%"
+ *       },
+ *       {
+ *         "label":"Revenue",
+ *         "value":"$11,334.00",
+ *         "additional":"30.00%"
+ *       }
+ *     ]
+ *   ]
+ * }
  */
 export function flattenTable(data) {
 
   //get row groups
-  var rowGroups = []
-  for (var i = 0; i < data.rows.length; i++) {
+  let rowGroups = []
+  for (let i = 0; i < data.rows.length; i++) {
     rowGroups = rowGroups.concat(getRowGroups(data.rows[i]))
   }
 
   //get column groups
-  var columnGroups = getColumnGroups(getRootColumns(data.rows[0]))
+  let columnGroups = getColumnGroups(getRootColumns(data.rows[0]))
 
   //get cells
-  var cells = getCells(data)
+  let cells = getCells(data)
 
   //split cells into rows
-  var columnCount = getColumnCount(columnGroups)
-  var rowCells = []
-  var currentRow
-  for (var i = 0; i < cells.length; i++) {
+  let columnCount = getColumnCount(columnGroups)
+  let rowCells = []
+  let currentRow
+  for (let i = 0; i < cells.length; i++) {
     if (i % columnCount == 0) {
       currentRow = []
       rowCells.push(currentRow)
@@ -380,10 +606,10 @@ export function flattenTable(data) {
 
   function getColumnCount(columnGroups) {
 
-    var count = 0
+    let count = 0
 
-    for (var i = 0; i < columnGroups.length; i++) {
-      var group = columnGroups[i]
+    for (let i = 0; i < columnGroups.length; i++) {
+      let group = columnGroups[i]
       if (group.groups) {
         count += getColumnCount(group.groups)
       }
@@ -398,17 +624,17 @@ export function flattenTable(data) {
   function getCells(data, parent) {
     if (!parent) parent = data
 
-    var cells = []
+    let cells = []
 
     if (data.rows && data.rows.length) {
-      for (var i = 0; i < data.rows.length; i++) {
-        var row = data.rows[i]
+      for (let i = 0; i < data.rows.length; i++) {
+        let row = data.rows[i]
         cells = cells.concat(getCells(row, data))
       }
     }
     else if (data.columns && data.columns.length) {
-      for (var i = 0; i < data.columns.length; i++) {
-        var column = data.columns[i]
+      for (let i = 0; i < data.columns.length; i++) {
+        let column = data.columns[i]
         cells = cells.concat(getCells(column, data))
       }
     }
@@ -422,14 +648,14 @@ export function flattenTable(data) {
   }
 
   function getRowGroups(data) {
-    var groups = []
+    let groups = []
     if (data.rows && data.rows.length) {
-      var group = {
+      let group = {
         title: data.title
       }
       groups.push(group)
-      var subGroups = []
-      for (var i = 0; i < data.rows.length; i++) {
+      let subGroups = []
+      for (let i = 0; i < data.rows.length; i++) {
         subGroups = subGroups.concat(getRowGroups(data.rows[i]))
       }
       if (subGroups.length) group.groups = subGroups
@@ -440,7 +666,7 @@ export function flattenTable(data) {
   function getRootColumns(data) {
 
     //drill down the rows
-    var parent = data
+    let parent = data
     while (data.rows) {
       parent = data
       data = data.rows[0]
@@ -450,21 +676,21 @@ export function flattenTable(data) {
   }
 
   function getColumnGroups(data) {
-    var groups = []
+    let groups = []
 
     //process all root columns
-    for (var x = 0; x < data.length; x++) {
-      var column = data[x]
+    for (let x = 0; x < data.length; x++) {
+      let column = data[x]
 
       //create group
-      var group = {
+      let group = {
         title: column.title
       }
       groups.push(group)
 
       //process sub columns
       if (column.columns && column.columns.length) {
-        var subGroups = getColumnGroups(column.columns)
+        let subGroups = getColumnGroups(column.columns)
         if (subGroups.length) group.groups = subGroups
       }
     }

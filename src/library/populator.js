@@ -11,6 +11,7 @@ import * as Data from './data'
 import * as Layers from './layers';
 import * as Placeholders from './placeholders'
 import * as Args from './args'
+import * as Actions from './actions'
 
 
 /**
@@ -233,6 +234,7 @@ export function populateLayer(layer, data, opt) {
       populateArtboard(artboardLayer, data, {
         defaultSubstitute: opt.defaultSubstitute
       })
+      Actions.performActions(artboardLayer, data)
     })
 
     //populate text layers
@@ -243,21 +245,33 @@ export function populateLayer(layer, data, opt) {
         insertEllipsis: opt.insertEllipsis,
         defaultSubstitute: opt.defaultSubstitute
       })
+      Actions.performActions(textLayer, data)
     })
 
     //populate images
-    let imageLayers = Layers.findLayersInLayer('{*}', false, Layers.SHAPE, layer, false, null)
-    imageLayers = imageLayers.concat(Layers.findLayersInLayer('{*}', false, Layers.BITMAP, layer, false, null))
+    let imageLayers = Layers.findLayersInLayer('{*}*', false, Layers.SHAPE, layer, false, null)
+    imageLayers = imageLayers.concat(Layers.findLayersInLayer('{*}*', false, Layers.BITMAP, layer, false, null))
     imageLayers.forEach((imageLayer) => {
       populateImageLayer(imageLayer, data, {
         rootDir: opt.rootDir
       })
+      Actions.performActions(imageLayer, data)
     })
 
     //populate symbols
     let symbolLayers = Layers.findLayersInLayer('*', false, Layers.SYMBOL, layer, false, null)
     symbolLayers.forEach(function (symbolLayer) {
       populateSymbolLayer(symbolLayer, data, opt)
+      Actions.performActions(symbolLayer, data)
+    })
+
+    //perform actions on group
+    Actions.performActions(layer, data)
+
+    //perform actions on sub-groups
+    let groupLayers = Layers.findLayersInLayer('*', false, Layers.GROUP, layer, false, null)
+    groupLayers.forEach(function (groupLayer) {
+      Actions.performActions(groupLayer, data)
     })
   }
 
@@ -268,6 +282,7 @@ export function populateLayer(layer, data, opt) {
       insertEllipsis: opt.insertEllipsis,
       defaultSubstitute: opt.defaultSubstitute
     })
+    Actions.performActions(layer, data)
   }
 
   //populate image layer
@@ -278,12 +293,14 @@ export function populateLayer(layer, data, opt) {
       populateImageLayer(layer, data, {
         rootDir: opt.rootDir
       })
+      Actions.performActions(layer, data)
     }
   }
 
   //populate symbol
   else if (Layers.isSymbolInstance(layer)) {
     populateSymbolLayer(layer, data, opt)
+    Actions.performActions(layer, data)
   }
 }
 
@@ -311,8 +328,8 @@ export function clearLayer(layer) {
     })
 
     //clear images
-    let imageLayers = Layers.findLayersInLayer('{*}', false, Layers.SHAPE, layer, false, null)
-    imageLayers = imageLayers.concat(Layers.findLayersInLayer('{*}', false, Layers.BITMAP, layer, false, null))
+    let imageLayers = Layers.findLayersInLayer('{*}*', false, Layers.SHAPE, layer, false, null)
+    imageLayers = imageLayers.concat(Layers.findLayersInLayer('{*}*', false, Layers.BITMAP, layer, false, null))
     imageLayers.forEach((imageLayer) => {
       clearImageLayer(imageLayer)
     })

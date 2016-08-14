@@ -37,17 +37,18 @@
     Filters are used via the pipe (|) operator and can be chained. Each filter has a name and an alias, e.g. join and &. More filters can be easily implemented.
 
       
-# Conditional actions (not implemented yet)
+# Conditional actions
 
     - actions that get executed based on a condition applicable to the specific layer
     - can be added to any layer (even text layers whose names contain a placeholder)
     
     Actions:
-        - #show(condition) - shows layer if true and hides otherwise
-        - #hide(condition) - hides layer if true and shows otherwise
-        - #lock(condition) - locks layer if true and unlocks otherwise
-        - #unlock(condition) - unlocks layer if true and locks otherwise
-        - #run(condition, fn) - runs the function if condition is true, passing in the layer as parameter
+        - #show[condition] - shows layer if true and hides otherwise
+        - #hide[condition] - hides layer if true and shows otherwise
+        - #lock[condition] - locks layer if true and unlocks otherwise
+        - #unlock[condition] - unlocks layer if true and locks otherwise
+        - #delete[condition] - deletes the layer if the condition is true
+        - #plugin[condition, command path] - runs the specified plugin command if condition is true
         
-    Examples with actions:
-        - {firstName} #run({firstName} == "John", setColor(this.layer, "#ff0000"))
+    Example actions:
+        - #plugin["{name}".length > 2, Some Plugin > The Command]

@@ -4741,7 +4741,7 @@ exports.default = function (context) {
     * Clears the selected layers of any populated data and removes any metadata.
     */
 
-},{"../context":156,"../library/layers":164,"../library/populator":167}],150:[function(require,module,exports){
+},{"../context":156,"../library/layers":171,"../library/populator":174}],150:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4853,7 +4853,7 @@ exports.default = function (context) {
   }
 };
 
-},{"../context":156,"../library/options":165,"../library/populator":167,"./populateTable":152,"./populateWithJSON":153,"./populateWithPreset":154}],152:[function(require,module,exports){
+},{"../context":156,"../library/options":172,"../library/populator":174,"./populateTable":152,"./populateWithJSON":153,"./populateWithPreset":154}],152:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4953,7 +4953,7 @@ exports.default = function (context, populateAgain) {
   Layers.selectLayers([tableLayerGroup]);
 };
 
-},{"../context":156,"../library/data":158,"../library/gui":163,"../library/layers":164,"../library/options":165,"../library/populator":167}],153:[function(require,module,exports){
+},{"../context":156,"../library/data":165,"../library/gui":170,"../library/layers":171,"../library/options":172,"../library/populator":174}],153:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5063,7 +5063,7 @@ exports.default = function (context, populateAgain) {
   Layers.selectLayers(selectedLayers);
 };
 
-},{"../context":156,"../library/data":158,"../library/gui":163,"../library/layers":164,"../library/options":165,"../library/populator":167}],154:[function(require,module,exports){
+},{"../context":156,"../library/data":165,"../library/gui":170,"../library/layers":171,"../library/options":172,"../library/populator":174}],154:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5179,7 +5179,7 @@ exports.default = function (context, populateAgain) {
   Layers.selectLayers(selectedLayers);
 };
 
-},{"../context":156,"../library/data":158,"../library/gui":163,"../library/layers":164,"../library/options":165,"../library/populator":167}],155:[function(require,module,exports){
+},{"../context":156,"../library/data":165,"../library/gui":170,"../library/layers":171,"../library/options":172,"../library/populator":174}],155:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5215,7 +5215,7 @@ exports.default = function (context) {
   NSWorkspace.sharedWorkspace().openURL(url);
 };
 
-},{"../context":156,"../library/data":158}],156:[function(require,module,exports){
+},{"../context":156,"../library/data":165}],156:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5244,6 +5244,472 @@ var context = null;
 //set and get context via the same function
 
 },{}],157:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.perform = perform;
+/**
+ * Delete action
+ */
+
+var name = exports.name = 'delete';
+var alias = exports.alias = 'd';
+
+/**
+ * Deletes the layer if the condition is true.
+ *
+ * @param {boolean} condition
+ * @param {MSLayer} layer
+ * @param {Array} params
+ */
+function perform(condition, layer, params) {
+  if (!condition) return;
+
+  //remove layer from parent
+  layer.removeFromParent();
+}
+
+},{}],158:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.perform = perform;
+/**
+ * Hide action
+ */
+
+var name = exports.name = 'hide';
+var alias = exports.alias = 'h';
+
+/**
+ * Hides the layer if the condition is true or shows it otherwise.
+ *
+ * @param {boolean} condition
+ * @param {MSLayer} layer
+ * @param {Array} params
+ */
+function perform(condition, layer, params) {
+  layer.setIsVisible(!condition);
+}
+
+},{}],159:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.performActions = performActions;
+exports.extractActions = extractActions;
+exports.parseAction = parseAction;
+exports.performAction = performAction;
+
+var _context = require('../../context');
+
+var _context2 = _interopRequireDefault(_context);
+
+var _placeholders = require('../placeholders');
+
+var Placeholders = _interopRequireWildcard(_placeholders);
+
+var _show = require('./show');
+
+var ShowAction = _interopRequireWildcard(_show);
+
+var _hide = require('./hide');
+
+var HideAction = _interopRequireWildcard(_hide);
+
+var _lock = require('./lock');
+
+var LockAction = _interopRequireWildcard(_lock);
+
+var _unlock = require('./unlock');
+
+var UnlockAction = _interopRequireWildcard(_unlock);
+
+var _delete = require('./delete');
+
+var DeleteAction = _interopRequireWildcard(_delete);
+
+var _plugin = require('./plugin');
+
+var PluginAction = _interopRequireWildcard(_plugin);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Load action functions
+ */
+/**
+ * Actions library
+ *
+ * Provides functionality to extract, parse and execute actions.
+ */
+
+var actions = [ShowAction, HideAction, LockAction, UnlockAction, DeleteAction, PluginAction];
+
+/**
+ * Perform all actions on a layer.
+ *
+ * @param {MSLayer} layer
+ * @param {Object} data
+ */
+function performActions(layer, data) {
+
+  //process conditional actions on the layer
+  var actions = extractActions(layer.name());
+
+  //perform actions
+  actions.forEach(function (action) {
+    performAction(action, layer, data);
+  });
+}
+
+/**
+ * Extracts actions from the layer name, e.g. ... #show({firstName}.length > 3)
+ *
+ * @param {string} string
+ * @returns {Array}
+ */
+function extractActions(string) {
+
+  //get individual actions
+  var actionStrings = string.match(/#\w*\[([^\]]+)]/g) || [];
+
+  //parse actions
+  var extractedActions = actionStrings.map(function (actionString) {
+    return parseAction(actionString);
+  });
+
+  return extractedActions;
+}
+
+/**
+ * Parses the action string, #run({firstName}.length > 3, fnToRun)
+ *
+ * @param {string} actionString
+ * @returns {Object}
+ *
+ * returned action: {
+ *   string: {string},
+ *   command: {string},
+ *   condition: {
+ *     string: {string},
+ *     placeholders: [{
+ *         string: {string},
+ *         keypath: {string},
+ *         filters: {Array},
+ *         substitute: {string},
+ *         placeholders: {Array}
+ *       }]
+ *   },
+ *   params: [{
+ *     string: {string},
+ *     placeholders: {Array as for condition},
+ *   }]
+ * }
+ */
+function parseAction(actionString) {
+
+  //keep full action string
+  //used later on when executing actions
+  var fullActionString = actionString;
+
+  //get command
+  var command = actionString.match(/#(\w+)/g)[0];
+
+  //remove command from string
+  actionString = actionString.substring(command.length + 1, actionString.length - 1);
+
+  //remove # from command string
+  command = command.substring(1);
+
+  //split action string into components
+  var actionComponents = actionString.split(/(?![^(]*\)),/g);
+
+  //get condition string
+  var conditionString = actionComponents[0];
+
+  //extract placeholders in condition
+  var conditionPlaceholders = Placeholders.extractPlaceholders(conditionString);
+
+  //get params
+  actionComponents.shift();
+  var params = actionComponents.map(function (paramString) {
+
+    //get placeholders in param
+    var paramPlaceholders = Placeholders.extractPlaceholders(paramString);
+
+    //return complete param object with placeholders
+    return {
+      string: paramString.trim(),
+      placeholders: paramPlaceholders
+    };
+  });
+
+  //prepare action
+  var action = {
+    string: fullActionString,
+    command: command,
+    condition: {
+      string: conditionString,
+      placeholders: conditionPlaceholders
+    },
+    params: params
+  };
+
+  return action;
+}
+
+/**
+ * Performs the supplied action with the data and layer as input.
+ *
+ * @param {Object} action
+ * @param {MSLayer} layer
+ * @param {Object} data
+ */
+function performAction(action, layer, data) {
+
+  //find action function for the specified action
+  var actionFunction = void 0;
+  for (var i = 0; i < actions.length; i++) {
+    if (actions[i].name == action.command || actions[i].alias == action.command) {
+      actionFunction = actions[i].perform;
+    }
+  }
+
+  //continue only if action found
+  if (!actionFunction) {
+    return (0, _context2.default)().document.showMessage('Conditional action \'' + action.command + '\' on layer \'' + layer.name() + '\' does not exist.');
+  }
+
+  //create populated condition string
+  var populatedConditionString = action.condition.string;
+  action.condition.placeholders.forEach(function (placeholder) {
+
+    //populate placeholder found in the condition string
+    var populatedPlaceholder = Placeholders.populatePlaceholder(placeholder, data, 'null');
+
+    //replace original placeholder string
+    populatedConditionString = populatedConditionString.replace(placeholder.string, populatedPlaceholder);
+  });
+
+  //populate params
+  var populatedParams = action.params.map(function (param) {
+
+    //create populated param string
+    var populatedParamString = param.string;
+    param.placeholders.forEach(function (placeholder) {
+
+      //populate placeholder found in the param string
+      var populatedPlaceholder = Placeholders.populatePlaceholder(placeholder, data, 'null');
+
+      //replace original placeholder string
+      populatedParamString = populatedParamString.replace(placeholder.string, populatedPlaceholder);
+    });
+
+    return populatedParamString;
+  });
+
+  //get layer name without action string
+  //used within error messages
+  var layerName = layer.name().replace(action.string, '').trim();
+  if (!layerName.length) layerName = layer.name();
+
+  //evaluate condition
+  var condition = void 0;
+  try {
+
+    //evaluate condition
+    condition = new Function('return ' + populatedConditionString)();
+  } catch (e) {
+
+    //show error that action could not be evaluated
+    (0, _context2.default)().document.showMessage('Conditional action on layer \'' + layerName + '\' could not be evaluated.');
+  }
+
+  //perform action
+  try {
+    actionFunction(condition, layer, populatedParams);
+  } catch (e) {
+
+    //show error that action could not be performed
+    (0, _context2.default)().document.showMessage('Conditional action on layer \'' + layerName + '\' could not be performed.');
+  }
+}
+
+},{"../../context":156,"../placeholders":173,"./delete":157,"./hide":158,"./lock":160,"./plugin":161,"./show":162,"./unlock":163}],160:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.perform = perform;
+/**
+ * Lock action
+ */
+
+var name = exports.name = 'lock';
+var alias = exports.alias = 'l';
+
+/**
+ * Locks the layer if the condition is true or unlocks it otherwise.
+ *
+ * @param {boolean} condition
+ * @param {MSLayer} layer
+ * @param {Array} params
+ */
+function perform(condition, layer, params) {
+  layer.setIsLocked(condition);
+}
+
+},{}],161:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.alias = exports.name = undefined;
+exports.perform = perform;
+
+var _utils = require('../utils');
+
+var Utils = _interopRequireWildcard(_utils);
+
+var _layers = require('../layers');
+
+var Layers = _interopRequireWildcard(_layers);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+/**
+ * Plugin action
+ */
+
+var name = exports.name = 'plugin';
+var alias = exports.alias = 'p';
+
+/**
+ * Runs the specified plugin command.
+ *
+ * @param {boolean} condition
+ * @param {MSLayer} layer
+ * @param {Array} params
+ */
+function perform(condition, layer, params) {
+
+  //only run if the condition is true
+  if (!condition) return;
+
+  //get plugin manager
+  var pluginManager = NSApp.delegate().pluginManager();
+
+  //get all plugin bundles
+  var pluginBundles = pluginManager.plugins();
+
+  //build plugin tree
+  var plugins = {};
+  Utils.convertToJSArray(pluginBundles.allKeys()).forEach(function (bundleIdentifier) {
+
+    //get bundle
+    var bundle = pluginBundles.objectForKey(bundleIdentifier);
+
+    //get plugin commands
+    var pluginCommands = bundle.commands();
+
+    //build command object
+    var commands = {};
+    Utils.convertToJSArray(pluginCommands.allKeys()).forEach(function (commandIdentifier) {
+
+      //get command
+      var command = pluginCommands.objectForKey(commandIdentifier);
+
+      //add command
+      commands[command.name()] = command;
+    });
+
+    //add plugin with commands
+    plugins[bundle.name()] = commands;
+  });
+
+  //get plugin command path
+  var commandPath = params[0].split('>').map(function (component) {
+    return component.trim();
+  });
+
+  //get command to perform
+  var command = plugins[commandPath[0]][commandPath[1]];
+
+  //store current layer selection
+  var originalSelection = Layers.getSelectedLayers();
+
+  //select only the passed layer
+  Layers.selectLayers([layer]);
+
+  //run the command
+  NSApp.delegate().runPluginCommand(command);
+
+  //restore original selection
+  Layers.selectLayers(originalSelection);
+}
+
+},{"../layers":171,"../utils":175}],162:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.perform = perform;
+/**
+ * Show action
+ */
+
+var name = exports.name = 'show';
+var alias = exports.alias = 's';
+
+/**
+ * Shows the layer if the condition is true or hides it otherwise.
+ *
+ * @param {boolean} condition
+ * @param {MSLayer} layer
+ * @param {Array} params
+ */
+function perform(condition, layer, params) {
+  layer.setIsVisible(condition);
+}
+
+},{}],163:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.perform = perform;
+/**
+ * Unlock action
+ */
+
+var name = exports.name = 'unlock';
+var alias = exports.alias = 'u';
+
+/**
+ * Unlocks the layer if the condition is true or locks it otherwise.
+ *
+ * @param {boolean} condition
+ * @param {MSLayer} layer
+ * @param {Array} params
+ */
+function perform(condition, layer, params) {
+  layer.setIsLocked(!condition);
+}
+
+},{}],164:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5297,7 +5763,7 @@ function parseArgs(string, definitions) {
   return (0, _commandLineArgs2.default)(definitions, string.split(/\s+/g));
 }
 
-},{"command-line-args":7}],158:[function(require,module,exports){
+},{"command-line-args":7}],165:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6001,7 +6467,7 @@ function flattenTable(data) {
   }
 }
 
-},{"../context":156}],159:[function(require,module,exports){
+},{"../context":156}],166:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6134,7 +6600,7 @@ function applyFilter(filter, input) {
   return applyFunction(input, filter.param);
 }
 
-},{"./join":160,"./max":161,"./uppercase":162}],160:[function(require,module,exports){
+},{"./join":167,"./max":168,"./uppercase":169}],167:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6172,7 +6638,7 @@ function apply(inputStrings, param) {
   return inputStrings.join(delimiter);
 }
 
-},{}],161:[function(require,module,exports){
+},{}],168:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6203,7 +6669,7 @@ function apply(string, param) {
   return string.substring(0, maxCharacters);
 }
 
-},{}],162:[function(require,module,exports){
+},{}],169:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6228,7 +6694,7 @@ function apply(string, param) {
   return String(string).toUpperCase();
 }
 
-},{}],163:[function(require,module,exports){
+},{}],170:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6700,7 +7166,7 @@ function createSelect(items, selectedIndex, frame) {
   return select;
 }
 
-},{"../context":156,"./options":165,"./populator":167}],164:[function(require,module,exports){
+},{"../context":156,"./options":172,"./populator":174}],171:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7100,7 +7566,7 @@ function createGrid(selectedLayers, opt) {
   return newSelectedLayers;
 }
 
-},{"../context":156,"./utils":168}],165:[function(require,module,exports){
+},{"../context":156,"./utils":175}],172:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7181,7 +7647,7 @@ var OPTIONS = [RANDOMIZE_DATA, TRIM_TEXT, INSERT_ELLIPSIS, DEFAULT_SUBSTITUTE, C
  * @returns {Object}
  */
 
-},{"./utils":168}],166:[function(require,module,exports){
+},{"./utils":175}],173:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7584,7 +8050,7 @@ function isRootPlaceholder(placeholder) {
   return placeholder && placeholder[0] == '{' && placeholder[placeholder.length - 1] == '}';
 }
 
-},{"./filters":159,"lodash/get":138}],167:[function(require,module,exports){
+},{"./filters":166,"lodash/get":138}],174:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7620,6 +8086,10 @@ var _args = require('./args');
 
 var Args = _interopRequireWildcard(_args);
 
+var _actions = require('./actions');
+
+var Actions = _interopRequireWildcard(_actions);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -7627,12 +8097,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * Populate types:
  */
-/**
- * Populator library
- *
- * Provides functionality to populate layers.
- */
-
 var POPULATE_TYPE = exports.POPULATE_TYPE = {
   PRESET: 'preset',
   JSON: 'json',
@@ -7654,6 +8118,12 @@ var POPULATE_TYPE = exports.POPULATE_TYPE = {
  *   defaultSubstitute: {string}
  * }
  */
+/**
+ * Populator library
+ *
+ * Provides functionality to populate layers.
+ */
+
 function populateTable(layer, data, opt) {
 
   //populate row headers
@@ -7843,6 +8313,7 @@ function populateLayer(layer, data, opt) {
       populateArtboard(artboardLayer, data, {
         defaultSubstitute: opt.defaultSubstitute
       });
+      Actions.performActions(artboardLayer, data);
     });
 
     //populate text layers
@@ -7853,21 +8324,33 @@ function populateLayer(layer, data, opt) {
         insertEllipsis: opt.insertEllipsis,
         defaultSubstitute: opt.defaultSubstitute
       });
+      Actions.performActions(textLayer, data);
     });
 
     //populate images
-    var imageLayers = Layers.findLayersInLayer('{*}', false, Layers.SHAPE, layer, false, null);
-    imageLayers = imageLayers.concat(Layers.findLayersInLayer('{*}', false, Layers.BITMAP, layer, false, null));
+    var imageLayers = Layers.findLayersInLayer('{*}*', false, Layers.SHAPE, layer, false, null);
+    imageLayers = imageLayers.concat(Layers.findLayersInLayer('{*}*', false, Layers.BITMAP, layer, false, null));
     imageLayers.forEach(function (imageLayer) {
       populateImageLayer(imageLayer, data, {
         rootDir: opt.rootDir
       });
+      Actions.performActions(imageLayer, data);
     });
 
     //populate symbols
     var symbolLayers = Layers.findLayersInLayer('*', false, Layers.SYMBOL, layer, false, null);
     symbolLayers.forEach(function (symbolLayer) {
       populateSymbolLayer(symbolLayer, data, opt);
+      Actions.performActions(symbolLayer, data);
+    });
+
+    //perform actions on group
+    Actions.performActions(layer, data);
+
+    //perform actions on sub-groups
+    var groupLayers = Layers.findLayersInLayer('*', false, Layers.GROUP, layer, false, null);
+    groupLayers.forEach(function (groupLayer) {
+      Actions.performActions(groupLayer, data);
     });
   }
 
@@ -7878,6 +8361,7 @@ function populateLayer(layer, data, opt) {
         insertEllipsis: opt.insertEllipsis,
         defaultSubstitute: opt.defaultSubstitute
       });
+      Actions.performActions(layer, data);
     }
 
     //populate image layer
@@ -7888,12 +8372,14 @@ function populateLayer(layer, data, opt) {
           populateImageLayer(layer, data, {
             rootDir: opt.rootDir
           });
+          Actions.performActions(layer, data);
         }
       }
 
       //populate symbol
       else if (Layers.isSymbolInstance(layer)) {
           populateSymbolLayer(layer, data, opt);
+          Actions.performActions(layer, data);
         }
 }
 
@@ -7920,8 +8406,8 @@ function clearLayer(layer) {
     });
 
     //clear images
-    var imageLayers = Layers.findLayersInLayer('{*}', false, Layers.SHAPE, layer, false, null);
-    imageLayers = imageLayers.concat(Layers.findLayersInLayer('{*}', false, Layers.BITMAP, layer, false, null));
+    var imageLayers = Layers.findLayersInLayer('{*}*', false, Layers.SHAPE, layer, false, null);
+    imageLayers = imageLayers.concat(Layers.findLayersInLayer('{*}*', false, Layers.BITMAP, layer, false, null));
     imageLayers.forEach(function (imageLayer) {
       clearImageLayer(imageLayer);
     });
@@ -8531,7 +9017,7 @@ function clearArtboard(layer) {
   removeLayerMetadata(layer);
 }
 
-},{"../context":156,"./args":157,"./data":158,"./layers":164,"./placeholders":166,"./utils":168}],168:[function(require,module,exports){
+},{"../context":156,"./actions":159,"./args":164,"./data":165,"./layers":171,"./placeholders":173,"./utils":175}],175:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -8645,7 +9131,7 @@ function parsePrimitives(value) {
   return value;
 }
 
-},{}],169:[function(require,module,exports){
+},{}],176:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -8803,4 +9289,4 @@ __globals.___clearLayers_run_handler_ = function (context, params) {
 }__$end_of_manifest_
 */
 
-},{"./commands":150}]},{},[169]);
+},{"./commands":150}]},{},[176]);

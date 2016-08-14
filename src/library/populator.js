@@ -345,6 +345,36 @@ export function clearLayer(layer) {
 }
 
 
+
+/**
+ * Removes any Data Populator data from a layer's metadata.
+ *
+ * @param {MSLayer} layer
+ */
+function removeLayerMetadata(layer) {
+
+  //get user info
+  let userInfo = NSMutableDictionary.dictionaryWithDictionary(layer.userInfo())
+
+  //prepare clean user info
+  let cleanUserInfo = NSMutableDictionary.alloc().init()
+
+  //get keys
+  let keys = Utils.convertToJSArray(userInfo.allKeys())
+
+  //add values other than data populator's
+  for(let i = 0; i < keys.length; i++) {
+    let key = keys[i]
+    if(key.indexOf('datapopulator') == -1) {
+      cleanUserInfo.setValue_forKey(userInfo.valueForKey(key), key)
+    }
+  }
+
+  //set clean user info
+  layer.setUserInfo(cleanUserInfo)
+}
+
+
 /**
  * Populates a symbol instance layer.
  *
@@ -422,6 +452,9 @@ function clearSymbolLayer(layer) {
 
   //remove overrides
   layer.setOverrides(null)
+
+  //remove metadata
+  removeLayerMetadata(layer)
 }
 
 
@@ -552,10 +585,10 @@ function clearTextLayer(layer) {
 
     //refresh and resize
     Layers.refreshTextLayer(layer)
-
-    //remove original text
-    setOriginalText(layer, null)
   }
+
+  //clear any data populator metadata
+  removeLayerMetadata(layer)
 }
 
 
@@ -567,11 +600,13 @@ function clearTextLayer(layer) {
  */
 function getOriginalText(layer, ignoreMetadata) {
 
-  //get command
-  let command = Context().command
+  //get data dictionary
+  let dataDict = getDataDictionary(layer)
 
   //get text stored in layer metadata
-  let text = command.valueForKey_onLayer('originalText', layer)
+  //LEGACY: check old 'textWithPlaceholders' key
+  let text = dataDict.valueForKey('textWithPlaceholders')
+  if(!text) text = dataDict.valueForKey('originalText')
 
   //set original text if it doesn't exist
   if (ignoreMetadata || !text || !text.length) {
@@ -599,11 +634,72 @@ function getOriginalText(layer, ignoreMetadata) {
  */
 function setOriginalText(layer, text) {
 
-  //get command
-  let command = Context().command
+  //get data dictionary
+  let dataDict = getDataDictionary(layer)
 
   //save new text as the original text in metadata
-  command.setValue_forKey_onLayer(text, 'originalText', layer)
+  dataDict.setValue_forKey(text, 'originalText')
+
+  //LEGACY: remove any old values stored in the dictionary
+  dataDict.removeObjectForKey('textWithPlaceholders')
+
+  //set new data dictionary
+  setDataDictionary(layer, dataDict)
+}
+
+
+/**
+ * Retrieves the data dictionary from layer's userInfo.
+ *
+ * @param {MSLayer} layer
+ * @returns {NSMutableDictionary}
+ */
+function getDataDictionary(layer) {
+
+  //get user info
+  let userInfo = NSMutableDictionary.dictionaryWithDictionary(layer.userInfo())
+
+  //get plugin data dictionary
+  let dataDict = userInfo.valueForKey('com.precious-forever.sketch.datapopulator')
+
+  //LEGACY: get values for old versions of data populator
+  if(!dataDict) dataDict = userInfo.valueForKey('com.precious-forever.sketch.datapopulator2')
+  if(!dataDict) dataDict = userInfo.valueForKey('com.precious-forever.sketch.datapopulatorBETA')
+
+  //get mutable dictionary from dictionary
+  dataDict = NSMutableDictionary.dictionaryWithDictionary(dataDict)
+
+  return dataDict
+}
+
+
+/**
+ * Sets a new data dictionary in userInfo of the layer.
+ *
+ * @param {MSLayer} layer
+ * @param {NSMutableDictionary} dataDict
+ */
+function setDataDictionary(layer, dataDict) {
+
+  //get user info
+  let userInfo = NSMutableDictionary.dictionaryWithDictionary(layer.userInfo())
+
+  //LEGACY: filter out any data from old data populator versions
+  let newUserInfo = NSMutableDictionary.alloc().init()
+  let keys = Utils.convertToJSArray(userInfo.allKeys())
+  for(let i = 0; i < keys.length; i++) {
+    let key = keys[i]
+    if(key.indexOf('datapopulator') == -1) {
+      newUserInfo.setValue_forKey(userInfo.valueForKey(key), key)
+    }
+  }
+  userInfo = newUserInfo
+
+  //set data dictionary
+  userInfo.setValue_forKey(dataDict, 'com.precious-forever.sketch.datapopulator')
+
+  //set new user info
+  layer.setUserInfo(userInfo)
 }
 
 
@@ -749,6 +845,9 @@ function populateImageLayer(layer, data, opt) {
 function clearImageLayer(layer) {
 
   //TODO: how should images be cleared?
+
+  //remove metadata
+  removeLayerMetadata(layer)
 }
 
 
@@ -838,8 +937,8 @@ function clearArtboard(layer) {
 
     //set artboard name
     layer.setName(originalText)
-
-    //remove original text
-    setOriginalText(layer, null)
   }
+
+  //clear any data populator metadata
+  removeLayerMetadata(layer)
 }

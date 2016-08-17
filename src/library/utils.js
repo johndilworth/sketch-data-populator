@@ -15,8 +15,8 @@ export function convertToJSArray(nativeArray) {
   let length = nativeArray.count();
   let jsArray = [];
 
-  while (length--) {
-    jsArray.push(nativeArray.objectAtIndex(length));
+  while (jsArray.length < length) {
+    jsArray.push(nativeArray.objectAtIndex(jsArray.length));
   }
   return jsArray;
 }

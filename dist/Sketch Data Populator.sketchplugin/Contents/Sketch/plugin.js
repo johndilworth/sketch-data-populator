@@ -5643,6 +5643,9 @@ function perform(condition, layer, params) {
     return component.trim();
   });
 
+  //remove command path from params
+  params.shift();
+
   //get command to perform
   var command = plugins[commandPath[0]][commandPath[1]];
 
@@ -5652,11 +5655,53 @@ function perform(condition, layer, params) {
   //select only the passed layer
   Layers.selectLayers([layer]);
 
+  //add params
+  setCommandParamsToMetadata(layer, params);
+
   //run the command
   NSApp.delegate().runPluginCommand(command);
 
+  //remove params
+  removeCommandParamsFromMetadata(layer);
+
   //restore original selection
   Layers.selectLayers(originalSelection);
+}
+
+/**
+ * Adds the provided params to the metadata of the layer. This way, the other
+ * plugin can read those params.
+ *
+ * @param {MSLayer} layer
+ * @param {Array} params
+ */
+function setCommandParamsToMetadata(layer, params) {
+
+  //get layer user info
+  var userInfo = NSMutableDictionary.dictionaryWithDictionary(layer.userInfo());
+
+  //set params
+  userInfo.setValue_forKey(params, 'datapopulator');
+
+  //set new user info
+  layer.setUserInfo(userInfo);
+}
+
+/**
+ * Removes command params from the layer metadata.
+ *
+ * @param {MSLayer} layer
+ */
+function removeCommandParamsFromMetadata(layer) {
+
+  //get layer user info
+  var userInfo = NSMutableDictionary.dictionaryWithDictionary(layer.userInfo());
+
+  //remove params
+  userInfo.removeObjectForKey('datapopulator');
+
+  //set new user info
+  layer.setUserInfo(userInfo);
 }
 
 },{"../layers":171,"../utils":175}],162:[function(require,module,exports){
@@ -7687,7 +7732,7 @@ function extractPlaceholders(string) {
   var placeholders = [];
 
   //match placeholders identified by {}
-  var regex = /(?![^(]*\)){([^}]+)}/g;
+  var regex = /(?![^(]*\)|[^\[]*]){([^}]+)}/g;
   var match = void 0;
   while (match = regex.exec(string)) {
 
@@ -9044,8 +9089,8 @@ function convertToJSArray(nativeArray) {
   var length = nativeArray.count();
   var jsArray = [];
 
-  while (length--) {
-    jsArray.push(nativeArray.objectAtIndex(length));
+  while (jsArray.length < length) {
+    jsArray.push(nativeArray.objectAtIndex(jsArray.length));
   }
   return jsArray;
 }

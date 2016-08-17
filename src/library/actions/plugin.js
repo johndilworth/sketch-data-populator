@@ -59,6 +59,9 @@ export function perform(condition, layer, params) {
     return component.trim()
   })
 
+  //remove command path from params
+  params.shift()
+
   //get command to perform
   let command = plugins[commandPath[0]][commandPath[1]]
 
@@ -68,9 +71,53 @@ export function perform(condition, layer, params) {
   //select only the passed layer
   Layers.selectLayers([layer])
 
+  //add params
+  setCommandParamsToMetadata(layer, params)
+
   //run the command
   NSApp.delegate().runPluginCommand(command)
 
+  //remove params
+  removeCommandParamsFromMetadata(layer)
+
   //restore original selection
   Layers.selectLayers(originalSelection)
+}
+
+
+/**
+ * Adds the provided params to the metadata of the layer. This way, the other
+ * plugin can read those params.
+ *
+ * @param {MSLayer} layer
+ * @param {Array} params
+ */
+function setCommandParamsToMetadata(layer, params) {
+
+  //get layer user info
+  let userInfo = NSMutableDictionary.dictionaryWithDictionary(layer.userInfo())
+
+  //set params
+  userInfo.setValue_forKey(params, 'datapopulator')
+
+  //set new user info
+  layer.setUserInfo(userInfo)
+}
+
+
+/**
+ * Removes command params from the layer metadata.
+ *
+ * @param {MSLayer} layer
+ */
+function removeCommandParamsFromMetadata(layer) {
+
+  //get layer user info
+  let userInfo = NSMutableDictionary.dictionaryWithDictionary(layer.userInfo())
+
+  //remove params
+  userInfo.removeObjectForKey('datapopulator')
+
+  //set new user info
+  layer.setUserInfo(userInfo)
 }

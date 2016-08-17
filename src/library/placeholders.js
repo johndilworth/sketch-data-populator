@@ -21,7 +21,7 @@ export function extractPlaceholders(string) {
   let placeholders = []
 
   //match placeholders identified by {}
-  let regex = /(?![^(]*\)){([^}]+)}/g
+  let regex = /(?![^(]*\)|[^\[]*]){([^}]+)}/g
   let match
   while (match = regex.exec(string)) {
 

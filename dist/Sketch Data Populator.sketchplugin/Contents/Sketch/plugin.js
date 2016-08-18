@@ -8373,8 +8373,8 @@ function populateLayer(layer, data, opt) {
     });
 
     //populate images
-    var imageLayers = Layers.findLayersInLayer('{*}*', false, Layers.SHAPE, layer, false, null);
-    imageLayers = imageLayers.concat(Layers.findLayersInLayer('{*}*', false, Layers.BITMAP, layer, false, null));
+    var imageLayers = Layers.findLayersInLayer('*', false, Layers.SHAPE, layer, false, null);
+    imageLayers = imageLayers.concat(Layers.findLayersInLayer('*', false, Layers.BITMAP, layer, false, null));
     imageLayers.forEach(function (imageLayer) {
       populateImageLayer(imageLayer, data, {
         rootDir: opt.rootDir
@@ -8901,8 +8901,8 @@ function populateImageLayer(layer, data, opt) {
   var inSymbol = !!opt.overrides;
 
   //extract image placeholder from layer name
-  //the placeholder is guaranteed to exist since otherwise this layer wouldn't be considered
   var imagePlaceholder = Placeholders.extractPlaceholders(layer.name())[0];
+  if (!imagePlaceholder) return;
 
   //get url by populating the placeholder
   var imageUrl = Placeholders.populatePlaceholder(imagePlaceholder, data, '');

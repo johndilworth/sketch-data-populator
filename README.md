@@ -1,4 +1,4 @@
-![Sketch Data Populator](sketch-data-populator.png)
+![Sketch Data Populator](https://github.com/preciousforever/sketch-data-populator/raw/master/sketch-data-populator.png)
 
 ## Why Data Populator
 
@@ -24,7 +24,7 @@ We conceived _Sketch Data Populator_ to improve our design process for working w
 
 The **Sketch Data Populator** plugin creates a grid from a selected element (Layer Group or Artboard) and replaces text and image {placeholders} with data from a JSON source:
 
-![Sketch Data Populator](sketch-data-populator.gif)
+![Sketch Data Populator](https://github.com/preciousforever/sketch-data-populator/raw/master/sketch-data-populator.gif)
 
 ### Here's how it works:
 
@@ -37,12 +37,12 @@ The **Sketch Data Populator** plugin creates a grid from a selected element (Lay
 #### Populate with JSON
 will ask you to choose a JSON file that can sit anywhere on your Computer. After picking a JSON file you can configure Data and Layout options:
 
-![Populate with JSON](populate-with-json-dialog.png)
+![Populate with JSON](https://github.com/preciousforever/sketch-data-populator/raw/master/populate-with-json-dialog.png)
 
 #### Populate with Preset
 will display a dialog that allows you to select one of your Presets as well as configure Data and Layout options:
 
-![Populate with Preset](populate-with-preset-dialog.png)
+![Populate with Preset](https://github.com/preciousforever/sketch-data-populator/raw/master/populate-with-preset-dialog.png)
 
 **Data options**  
 * _Randomize data order_: instead of going through the JSON top down row by row, it will pick a random data set.  

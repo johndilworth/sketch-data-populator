@@ -3242,7 +3242,7 @@ module.exports = testValue;
  * @param {any} - a value to test
  * @param {any} - the test query
  * @param [options] {object}
- * @param [options.strict] {boolean} - Treat an object like a value not a query. 
+ * @param [options.strict] {boolean} - Treat an object like a value not a query.
  * @returns {boolean}
  */
 function testValue(value, test, options) {
@@ -4930,9 +4930,8 @@ function getImageFromLocalURL(urlString) {
  */
 function getImageData(image) {
   if (!image) return;
-
   //create image data with image
-  return MSImageData.alloc().initWithImage_convertColorSpace(image, false);
+  return MSImageData.alloc().initWithImage(image)
 }
 
 /**
